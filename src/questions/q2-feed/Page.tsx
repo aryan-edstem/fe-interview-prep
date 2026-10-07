@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router';
 import { FeedList } from './components/FeedList';
+import { PostDetail } from './components/PostDetail';
 import { createFeedStore } from './feedStore';
 import { FeedStoreContext } from './hooks/useFeed';
 
@@ -14,6 +15,7 @@ export default function FeedPage() {
     <FeedStoreContext value={store}>
       <Routes>
         <Route index element={<FeedList />} />
+        <Route path=":postId" element={<PostDetail />} />
       </Routes>
     </FeedStoreContext>
   );
