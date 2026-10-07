@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { NavLink, Outlet } from 'react-router';
+import { NavLink, Outlet, ScrollRestoration } from 'react-router';
 import { questions } from '@/questions/registry';
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -31,6 +31,7 @@ export function Layout() {
           <Outlet />
         </Suspense>
       </main>
+      <ScrollRestoration />
     </div>
   );
 }
