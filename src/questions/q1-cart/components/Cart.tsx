@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { computeTotals } from '../money';
 import type { CartLine } from '../types';
 import { CartLineItem } from './CartLineItem';
@@ -30,11 +31,35 @@ function BagIcon() {
 export function Cart({ lines, onQuantityChange, onRemove }: CartProps) {
   // Derived on every render: cheap for a cart, and it can never drift from the lines.
   const totals = computeTotals(lines);
+  const sectionRef = useRef<HTMLElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  /** Where focus goes once a removed line has left the DOM. */
+  const focusAfterRemove = useRef<number | 'heading' | null>(null);
+
+  const handleRemove = (id: number) => {
+    const index = lines.findIndex((line) => line.id === id);
+    const neighbour = lines[index + 1] ?? lines[index - 1];
+    focusAfterRemove.current = neighbour ? neighbour.id : 'heading';
+    onRemove(id);
+  };
+
+  // Removing the focused line would drop focus to <body>; move it to the next line's Remove
+  // button (or the previous one), or to the cart heading when the cart is now empty.
+  useEffect(() => {
+    const target = focusAfterRemove.current;
+    if (target === null) return;
+    focusAfterRemove.current = null;
+    if (target === 'heading') {
+      headingRef.current?.focus();
+    } else {
+      sectionRef.current?.querySelector<HTMLElement>(`#cart-line-${target}-remove`)?.focus();
+    }
+  }, [lines]);
 
   return (
-    <section aria-labelledby="cart-heading" className="card">
+    <section ref={sectionRef} aria-labelledby="cart-heading" className="card">
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 sm:px-5">
-        <h2 id="cart-heading" className="section-title">
+        <h2 id="cart-heading" ref={headingRef} tabIndex={-1} className="section-title">
           Cart
         </h2>
         {totals.itemCount > 0 && (
@@ -58,7 +83,7 @@ export function Cart({ lines, onQuantityChange, onRemove }: CartProps) {
               key={line.id}
               line={line}
               onQuantityChange={onQuantityChange}
-              onRemove={onRemove}
+              onRemove={handleRemove}
             />
           ))}
         </ul>

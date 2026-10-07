@@ -56,7 +56,10 @@ describe('Shopping cart page', () => {
     expect(screen.getByText('$19.99')).toBeInTheDocument();
     expect(screen.getByText('10 in stock')).toBeInTheDocument();
     expect(cart().getByText('Your cart is empty')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Out of stock: Lipstick' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Out of stock: Lipstick' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 
   it('updates subtotal, tax and total immediately when quantities change', async () => {
@@ -109,14 +112,37 @@ describe('Shopping cart page', () => {
     await user.click(increase);
 
     expect(cart().getByRole('status', { name: 'Quantity of Mascara' })).toHaveTextContent('3');
-    expect(increase).toBeDisabled();
+    expect(increase).toHaveAttribute('aria-disabled', 'true');
+    expect(increase).toHaveFocus();
     expect(increase).toHaveAccessibleDescription('Max 3 in stock');
-    expect(screen.getByRole('button', { name: 'All 3 in cart: Mascara' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'All 3 in cart: Mascara' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
     expectTotals('$29.97', '$5.39', '$35.36');
 
     await user.click(increase);
     expect(cart().getByRole('status', { name: 'Quantity of Mascara' })).toHaveTextContent('3');
     expect(cart().getByRole('button', { name: 'Decrease quantity of Mascara' })).toBeEnabled();
+  });
+
+  it('keeps focus on the stepper at its limit and moves it sensibly after Remove', async () => {
+    mockProducts();
+    const { user } = await renderCart();
+    await user.click(screen.getByRole('button', { name: 'Add to cart: Mascara' }));
+    await user.click(screen.getByRole('button', { name: 'Add to cart: Palette' }));
+
+    const decrease = cart().getByRole('button', { name: 'Decrease quantity of Mascara' });
+    expect(decrease).toHaveAttribute('aria-disabled', 'true');
+    await user.click(decrease);
+    expect(decrease).toHaveFocus();
+    expect(cart().getByRole('status', { name: 'Quantity of Mascara' })).toHaveTextContent('1');
+
+    await user.click(cart().getByRole('button', { name: 'Remove Mascara' }));
+    expect(cart().getByRole('button', { name: 'Remove Palette' })).toHaveFocus();
+
+    await user.click(cart().getByRole('button', { name: 'Remove Palette' }));
+    expect(screen.getByRole('heading', { name: 'Cart' })).toHaveFocus();
   });
 
   it('keeps the cart across a remount (page refresh)', async () => {

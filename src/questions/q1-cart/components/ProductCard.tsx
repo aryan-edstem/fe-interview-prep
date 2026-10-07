@@ -23,6 +23,7 @@ export function ProductCard({ product, quantityInCart, onAdd }: ProductCardProps
   if (outOfStock) label = 'Out of stock';
   else if (atMax) label = `All ${product.stock} in cart`;
   else if (quantityInCart > 0) label = 'Add one more';
+  const unavailable = outOfStock || atMax;
 
   return (
     <article className="card flex h-full flex-col overflow-hidden">
@@ -48,8 +49,11 @@ export function ProductCard({ product, quantityInCart, onAdd }: ProductCardProps
         <div className="mt-auto pt-2">
           <button
             type="button"
-            onClick={() => onAdd(product)}
-            disabled={outOfStock || atMax}
+            // aria-disabled keeps focus here when the last unit is added; the guard blocks the add.
+            onClick={() => {
+              if (!unavailable) onAdd(product);
+            }}
+            aria-disabled={unavailable}
             aria-label={`${label}: ${product.title}`}
             className={`btn btn-sm w-full ${quantityInCart > 0 ? 'btn-secondary' : 'btn-primary'}`}
           >

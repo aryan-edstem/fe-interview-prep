@@ -7,11 +7,22 @@ export interface CartLineItemProps {
   onRemove: (id: number) => void;
 }
 
-const stepButton = 'btn btn-ghost btn-icon rounded-none text-base';
+const stepButton =
+  'btn btn-ghost btn-icon rounded-none text-base aria-disabled:hover:bg-transparent aria-disabled:hover:text-slate-600';
 
 export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemProps) {
+  const atMin = line.quantity <= 1;
   const atMax = line.quantity >= line.stock;
   const maxHintId = `cart-line-${line.id}-max`;
+
+  // `aria-disabled` (not `disabled`) keeps focus on a stepper that just hit its limit, so a
+  // keyboard user isn't dropped back to <body>. The handlers guard the limit instead.
+  const decrease = () => {
+    if (!atMin) onQuantityChange(line.id, line.quantity - 1);
+  };
+  const increase = () => {
+    if (!atMax) onQuantityChange(line.id, line.quantity + 1);
+  };
 
   return (
     <li className="flex gap-3 py-4">
@@ -36,8 +47,8 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
               type="button"
               className={stepButton}
               aria-label={`Decrease quantity of ${line.title}`}
-              disabled={line.quantity <= 1}
-              onClick={() => onQuantityChange(line.id, line.quantity - 1)}
+              aria-disabled={atMin}
+              onClick={decrease}
             >
               −
             </button>
@@ -52,14 +63,15 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
               className={stepButton}
               aria-label={`Increase quantity of ${line.title}`}
               aria-describedby={atMax ? maxHintId : undefined}
-              disabled={atMax}
-              onClick={() => onQuantityChange(line.id, line.quantity + 1)}
+              aria-disabled={atMax}
+              onClick={increase}
             >
               +
             </button>
           </div>
           <button
             type="button"
+            id={`cart-line-${line.id}-remove`}
             className="btn btn-ghost btn-sm text-rose-600 hover:bg-rose-50 hover:text-rose-700"
             aria-label={`Remove ${line.title}`}
             onClick={() => onRemove(line.id)}
