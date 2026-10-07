@@ -138,13 +138,24 @@ export default function KanbanPage() {
     return null;
   }
 
+  const totalCards = Object.keys(board.cards).length;
+
   return (
-    <section className="max-w-6xl">
-      <h1 className="mb-2 text-2xl font-bold">Kanban board</h1>
-      <p className="mb-6 text-slate-600">
-        Drag cards to move them, or use each card&apos;s Move button with the keyboard.
-      </p>
-      <div ref={boardRef} className="grid gap-4 md:grid-cols-3">
+    <div className="page">
+      <header className="page-header">
+        <div>
+          <p className="page-eyebrow">Question 3</p>
+          <h1 className="page-title">Kanban board</h1>
+          <p className="page-description">
+            Drag cards to move them, or use each card&apos;s Move button with the keyboard. Your
+            board is saved in this browser.
+          </p>
+        </div>
+        <p className="badge badge-neutral">
+          {totalCards} {totalCards === 1 ? 'card' : 'cards'} in total
+        </p>
+      </header>
+      <div ref={boardRef} className="grid items-start gap-4 md:grid-cols-3">
         {COLUMNS.map((column) => (
           <Column
             key={column.id}
@@ -208,29 +219,33 @@ export default function KanbanPage() {
         ))}
       </div>
       {deleted && (
-        <div className="mt-4 flex items-center gap-3 rounded-md bg-slate-900 px-4 py-2 text-sm text-white">
-          <span>Deleted &ldquo;{deleted.card.title}&rdquo;.</span>
-          <button
-            key={deleted.card.id}
-            type="button"
-            autoFocus
-            onClick={handleUndo}
-            className="rounded px-2 py-1 font-medium underline hover:bg-slate-700"
-          >
-            Undo
-          </button>
-          <button
-            type="button"
-            onClick={() => setDeleted(null)}
-            className="ml-auto rounded px-2 py-1 hover:bg-slate-700"
-          >
-            Dismiss
-          </button>
+        <div className="alert alert-info fixed inset-x-4 bottom-4 z-30 mx-auto max-w-md shadow-card-hover">
+          <span className="min-w-0 truncate">
+            Deleted <strong className="font-semibold">&ldquo;{deleted.card.title}&rdquo;</strong>
+          </span>
+          <span className="flex shrink-0 gap-1">
+            <button
+              key={deleted.card.id}
+              type="button"
+              autoFocus
+              onClick={handleUndo}
+              className="btn btn-primary btn-sm"
+            >
+              Undo
+            </button>
+            <button
+              type="button"
+              onClick={() => setDeleted(null)}
+              className="btn btn-ghost btn-sm text-brand-700 hover:bg-brand-100"
+            >
+              Dismiss
+            </button>
+          </span>
         </div>
       )}
       <p role="status" className="sr-only">
         {announcement}
       </p>
-    </section>
+    </div>
   );
 }

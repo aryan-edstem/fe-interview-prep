@@ -1,7 +1,14 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
-import type { Card, CardDraft, Column as ColumnType } from '../types';
+import type { Card, CardDraft, ColumnId, Column as ColumnType } from '../types';
 import { slotAt } from '../dnd';
 import { CardForm } from './CardForm';
+
+/** Per-column accent: a coloured top edge, a dot in the header and a matching count badge. */
+const ACCENTS: Record<ColumnId, { edge: string; dot: string; badge: string }> = {
+  todo: { edge: 'border-t-slate-400', dot: 'bg-slate-400', badge: 'badge-neutral' },
+  inProgress: { edge: 'border-t-brand-500', dot: 'bg-brand-500', badge: 'badge-brand' },
+  done: { edge: 'border-t-emerald-500', dot: 'bg-emerald-500', badge: 'badge-success' },
+};
 
 export interface ColumnProps {
   column: ColumnType;
@@ -29,6 +36,7 @@ export function Column({
   onDropAt,
 }: ColumnProps) {
   const headingId = useId();
+  const accent = ACCENTS[column.id];
   const count = cards.length;
   const [isAdding, setIsAdding] = useState(false);
   // Bumped after each add so the form remounts empty and refocuses its title for the next card.
@@ -51,9 +59,10 @@ export function Column({
   return (
     <section
       aria-labelledby={headingId}
-      className={`flex min-w-0 flex-col rounded-lg bg-slate-100 p-3 ${
-        dropSlot !== null ? 'ring-2 ring-blue-400' : ''
-      }`}
+      data-column-id={column.id}
+      className={`flex min-w-0 flex-col rounded-xl border border-t-4 border-slate-200 p-3 transition ${
+        accent.edge
+      } ${dropSlot !== null ? 'bg-brand-50/70 ring-2 ring-brand-200' : 'bg-slate-100/70'}`}
       onDragOver={(event) => {
         if (!isDragActive) return;
         event.preventDefault();
@@ -71,16 +80,20 @@ export function Column({
         onDropAt(slotFor(event.clientY));
       }}
     >
-      <h2 id={headingId} className="mb-3 flex items-center justify-between font-semibold">
+      <h2 id={headingId} className="mb-3 flex items-center gap-2 px-1 text-sm font-semibold">
+        <span aria-hidden="true" className={`size-2 rounded-full ${accent.dot}`} />
         {column.title}{' '}
-        <span className="rounded-full bg-white px-2 py-0.5 text-sm text-slate-700">
+        <span className={`badge ${accent.badge} ml-auto`}>
           {count} <span className="sr-only">{count === 1 ? 'card' : 'cards'}</span>
         </span>
       </h2>
       {count === 0 ? (
-        <p className="py-4 text-center text-sm text-slate-500">No cards yet</p>
+        <div className="empty-state py-8">
+          <p className="font-medium text-slate-600">No cards yet</p>
+          <p className="text-xs">Drag a card here or add a new one.</p>
+        </div>
       ) : (
-        <ul ref={listRef} className="space-y-2">
+        <ul ref={listRef} className="flex flex-col gap-2.5">
           {cards.map((card, index) => renderCard(card, index))}
         </ul>
       )}
@@ -105,10 +118,12 @@ export function Column({
                 button.focus();
               }
             }}
+            data-focus="add"
             onClick={() => setIsAdding(true)}
-            className="w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-200"
+            className="btn btn-ghost w-full justify-start text-slate-500"
           >
-            + Add card <span className="sr-only">to {column.title}</span>
+            <span className="text-base leading-none">+</span> Add card{' '}
+            <span className="sr-only">to {column.title}</span>
           </button>
         )}
       </div>

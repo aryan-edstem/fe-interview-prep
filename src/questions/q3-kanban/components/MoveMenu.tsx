@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { MoveIcon } from './icons';
 
 export type MoveDirection = 'up' | 'down' | 'left' | 'right';
 
@@ -17,34 +18,34 @@ export interface MoveMenuProps {
 const DIRECTIONS: readonly MoveDirection[] = ['up', 'down', 'left', 'right'];
 const ARROWS: Record<MoveDirection, string> = { up: '↑', down: '↓', left: '←', right: '→' };
 
-const buttonClass =
-  'rounded px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200 disabled:cursor-not-allowed disabled:text-slate-400 disabled:hover:bg-transparent';
-
 /**
- * Keyboard/pointer alternative to dragging: a disclosure button revealing a group of move buttons.
+ * Keyboard/pointer alternative to dragging: a disclosure button revealing a small popover with a
+ * group of move buttons.
  * Directions that aren't possible stay visible but disabled, so the layout doesn't jump.
  */
 export function MoveMenu({ cardTitle, isOpen, options, onToggle, onClose, onMove }: MoveMenuProps) {
   const panelId = useId();
 
   return (
-    <>
+    <div className="relative">
       <button
         type="button"
         data-focus="fallback"
         aria-expanded={isOpen}
         aria-controls={isOpen ? panelId : undefined}
         onClick={onToggle}
-        className={buttonClass}
+        title="Move"
+        className={`btn btn-ghost btn-sm btn-icon ${isOpen ? 'bg-brand-50 text-brand-700' : ''}`}
       >
-        Move <span className="sr-only">{cardTitle}</span>
+        <MoveIcon />
+        <span className="sr-only">Move {cardTitle}</span>
       </button>
       {isOpen && (
         <div
           id={panelId}
           role="group"
           aria-label={`Move ${cardTitle}`}
-          className="flex w-full flex-wrap gap-1 border-t border-slate-100 pt-1"
+          className="card absolute top-full right-0 z-20 mt-1 flex w-48 flex-col gap-0.5 p-1.5 shadow-card-hover"
           onKeyDown={(event) => {
             if (event.key === 'Escape') {
               event.stopPropagation();
@@ -61,16 +62,18 @@ export function MoveMenu({ cardTitle, isOpen, options, onToggle, onClose, onMove
                 data-focus={direction}
                 disabled={label === null}
                 onClick={() => onMove(direction)}
-                className={buttonClass}
+                className="btn btn-ghost btn-sm w-full justify-start"
               >
-                <span aria-hidden="true">{ARROWS[direction]} </span>
+                <span aria-hidden="true" className="w-4 text-center text-slate-400">
+                  {ARROWS[direction]}
+                </span>{' '}
                 {label ?? defaultLabel(direction)}
               </button>
             );
           })}
         </div>
       )}
-    </>
+    </div>
   );
 }
 

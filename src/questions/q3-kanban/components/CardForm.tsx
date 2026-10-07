@@ -32,7 +32,7 @@ export function CardForm({
     <form
       aria-label={label}
       noValidate
-      className="space-y-2 rounded-md border border-slate-300 bg-white p-3"
+      className="card space-y-3 p-3"
       onSubmit={(event) => {
         event.preventDefault();
         const trimmed = title.trim();
@@ -51,7 +51,7 @@ export function CardForm({
       }}
     >
       <div>
-        <label htmlFor={titleId} className="block text-sm font-medium">
+        <label htmlFor={titleId} className="label">
           Title
         </label>
         <input
@@ -66,16 +66,17 @@ export function CardForm({
           aria-required="true"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
-          className="mt-1 w-full rounded border border-slate-300 px-2 py-1 aria-invalid:border-red-600"
+          placeholder="What needs doing?"
+          className="input aria-invalid:focus:border-rose-500 aria-invalid:focus:ring-rose-100"
         />
         {error && (
-          <p id={errorId} className="mt-1 text-sm text-red-700">
+          <p id={errorId} className="field-error">
             {error}
           </p>
         )}
       </div>
       <div>
-        <label htmlFor={descriptionId} className="block text-sm font-medium">
+        <label htmlFor={descriptionId} className="label">
           Description <span className="font-normal text-slate-500">(optional)</span>
         </label>
         <textarea
@@ -83,21 +84,15 @@ export function CardForm({
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           rows={2}
-          className="mt-1 w-full rounded border border-slate-300 px-2 py-1"
+          placeholder="Add more detail"
+          className="input resize-y"
         />
       </div>
       <div className="flex gap-2">
-        <button
-          type="submit"
-          className="rounded bg-slate-900 px-3 py-1 text-sm font-medium text-white hover:bg-slate-700"
-        >
+        <button type="submit" className="btn btn-primary btn-sm">
           {submitLabel}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded px-3 py-1 text-sm text-slate-700 hover:bg-slate-200"
-        >
+        <button type="button" onClick={onCancel} className="btn btn-ghost btn-sm">
           Cancel
         </button>
       </div>

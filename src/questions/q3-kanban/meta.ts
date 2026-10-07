@@ -5,4 +5,5 @@ export const meta: QuestionMeta = {
   slug: 'kanban',
   title: 'Kanban board',
   summary: 'Three-column task board with drag-and-drop, keyboard moves and persistence.',
+  tags: ['useReducer', 'Drag and drop', 'Keyboard a11y', 'localStorage'],
 };

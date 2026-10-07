@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import type { Card, CardDraft } from '../types';
 import { CardForm } from './CardForm';
+import { PencilIcon, TrashIcon } from './icons';
 
 export interface CardItemProps {
   card: Card;
@@ -17,8 +18,6 @@ export interface CardItemProps {
   /** Keyboard-operable move controls, rendered with the card's other actions. */
   moveMenu: ReactNode;
 }
-
-const actionClass = 'rounded px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200';
 
 export function CardItem({
   card,
@@ -64,38 +63,51 @@ export function CardItem({
       {dropIndicator && (
         <span
           aria-hidden="true"
-          className={`absolute inset-x-0 h-1 rounded bg-blue-500 ${
+          className={`absolute inset-x-1 z-10 h-1 rounded-full bg-brand-500 ring-2 ring-brand-100 ${
             dropIndicator === 'before' ? '-top-1.5' : '-bottom-1.5'
           }`}
         />
       )}
       <article
         aria-labelledby={titleId}
-        className={`cursor-grab rounded-md border border-slate-200 bg-white p-3 shadow-sm ${
-          isDragging ? 'opacity-50' : ''
+        className={`card group/card cursor-grab p-3 transition active:cursor-grabbing ${
+          isDragging
+            ? 'rotate-1 border-brand-200 opacity-50 shadow-card-hover'
+            : 'hover:border-slate-300 hover:shadow-card-hover'
         }`}
       >
-        <h3 id={titleId} className="font-medium break-words">
-          {card.title}
-        </h3>
+        <div className="flex items-start gap-2">
+          <h3 id={titleId} className="min-w-0 flex-1 pt-1 text-sm font-semibold break-words">
+            {card.title}
+          </h3>
+          <div className="-mt-0.5 -mr-1 flex shrink-0 items-center">
+            <button
+              type="button"
+              data-focus="edit"
+              onClick={onEdit}
+              title="Edit"
+              className="btn btn-ghost btn-sm btn-icon"
+            >
+              <PencilIcon />
+              <span className="sr-only">Edit {card.title}</span>
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              title="Delete"
+              className="btn btn-ghost btn-sm btn-icon hover:bg-rose-50 hover:text-rose-600"
+            >
+              <TrashIcon />
+              <span className="sr-only">Delete {card.title}</span>
+            </button>
+            {moveMenu}
+          </div>
+        </div>
         {card.description && (
-          <p className="mt-1 text-sm whitespace-pre-line break-words text-slate-600">
+          <p className="mt-1 line-clamp-3 text-sm whitespace-pre-line break-words text-slate-500">
             {card.description}
           </p>
         )}
-        <div className="mt-2 flex flex-wrap gap-1">
-          <button type="button" data-focus="edit" onClick={onEdit} className={actionClass}>
-            Edit <span className="sr-only">{card.title}</span>
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            className={`${actionClass} text-red-700 hover:bg-red-50`}
-          >
-            Delete <span className="sr-only">{card.title}</span>
-          </button>
-          {moveMenu}
-        </div>
       </article>
     </li>
   );
