@@ -52,20 +52,20 @@ export function Cart({ lines, onQuantityChange, onRemove }: CartProps) {
           </div>
         </div>
       ) : (
-        <>
-          <ul className="divide-y divide-slate-100 px-4 sm:px-5">
-            {lines.map((line) => (
-              <CartLineItem
-                key={line.id}
-                line={line}
-                onQuantityChange={onQuantityChange}
-                onRemove={onRemove}
-              />
-            ))}
-          </ul>
-          <CartSummary totals={totals} />
-        </>
+        <ul className="divide-y divide-slate-100 px-4 sm:px-5">
+          {lines.map((line) => (
+            <CartLineItem
+              key={line.id}
+              line={line}
+              onQuantityChange={onQuantityChange}
+              onRemove={onRemove}
+            />
+          ))}
+        </ul>
       )}
+      {/* Always mounted: a live region only announces changes if it exists before they happen,
+          so the first add and the last remove are announced too. */}
+      <CartSummary totals={totals} />
     </section>
   );
 }

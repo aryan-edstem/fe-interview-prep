@@ -83,6 +83,20 @@ describe('Shopping cart page', () => {
 
     await user.click(cart().getByRole('button', { name: 'Remove Mascara' }));
     expect(cart().getByText('Your cart is empty')).toBeInTheDocument();
+    expectTotals('$0.00', '$0.00', '$0.00');
+  });
+
+  it('keeps one totals live region mounted from empty to filled', async () => {
+    mockProducts();
+    const { user } = await renderCart();
+
+    const totals = screen.getByRole('status', { name: 'Cart totals' });
+    expectTotals('$0.00', '$0.00', '$0.00');
+
+    await user.click(screen.getByRole('button', { name: 'Add to cart: Mascara' }));
+    expect(screen.getByRole('status', { name: 'Cart totals' })).toBe(totals);
+    expect(totals).toHaveAttribute('aria-live', 'polite');
+    expectTotals('$9.99', '$1.80', '$11.79');
   });
 
   it('cannot raise a quantity above the product stock', async () => {
