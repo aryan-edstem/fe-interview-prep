@@ -1,5 +1,7 @@
+import { computeTotals } from '../money';
 import type { CartLine } from '../types';
 import { CartLineItem } from './CartLineItem';
+import { CartSummary } from './CartSummary';
 
 export interface CartProps {
   lines: CartLine[];
@@ -8,6 +10,9 @@ export interface CartProps {
 }
 
 export function Cart({ lines, onQuantityChange, onRemove }: CartProps) {
+  // Derived on every render: cheap for a cart, and it can never drift from the lines.
+  const totals = computeTotals(lines);
+
   return (
     <section
       aria-labelledby="cart-heading"
@@ -26,6 +31,7 @@ export function Cart({ lines, onQuantityChange, onRemove }: CartProps) {
           />
         ))}
       </ul>
+      <CartSummary totals={totals} />
     </section>
   );
 }
