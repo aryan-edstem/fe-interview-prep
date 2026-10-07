@@ -56,7 +56,7 @@ export function Layout() {
                     {({ isActive }) => (
                       <>
                         <span className={numberClass({ isActive })}>{q.order}</span>
-                        <span>{q.title}</span>
+                        <span className="whitespace-nowrap">{q.title}</span>
                       </>
                     )}
                   </NavLink>
