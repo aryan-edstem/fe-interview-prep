@@ -9,6 +9,11 @@ export interface CardItemProps {
   onCancelEdit: () => void;
   onSave: (draft: CardDraft) => void;
   onDelete: () => void;
+  isDragging: boolean;
+  /** Draws the drop position line above or below this card while dragging. */
+  dropIndicator: 'before' | 'after' | null;
+  onDragStart: () => void;
+  onDragEnd: () => void;
 }
 
 const actionClass = 'rounded px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200';
@@ -20,6 +25,10 @@ export function CardItem({
   onCancelEdit,
   onSave,
   onDelete,
+  isDragging,
+  dropIndicator,
+  onDragStart,
+  onDragEnd,
 }: CardItemProps) {
   const titleId = useId();
 
@@ -38,10 +47,30 @@ export function CardItem({
   }
 
   return (
-    <li data-card-id={card.id} className="relative">
+    <li
+      data-card-id={card.id}
+      draggable
+      onDragStart={(event) => {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', card.id);
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
+      className="relative"
+    >
+      {dropIndicator && (
+        <span
+          aria-hidden="true"
+          className={`absolute inset-x-0 h-1 rounded bg-blue-500 ${
+            dropIndicator === 'before' ? '-top-1.5' : '-bottom-1.5'
+          }`}
+        />
+      )}
       <article
         aria-labelledby={titleId}
-        className="rounded-md border border-slate-200 bg-white p-3 shadow-sm"
+        className={`cursor-grab rounded-md border border-slate-200 bg-white p-3 shadow-sm ${
+          isDragging ? 'opacity-50' : ''
+        }`}
       >
         <h3 id={titleId} className="font-medium break-words">
           {card.title}

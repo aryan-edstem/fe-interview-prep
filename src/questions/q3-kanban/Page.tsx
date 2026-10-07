@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { COLUMNS } from './columns';
+import { COLUMNS, columnTitle } from './columns';
 import { CardItem } from './components/CardItem';
 import { Column } from './components/Column';
-import { useBoard } from './hooks/useBoard';
-import type { Card, DeletedCard } from './types';
+import { dropToMoveIndex, isNoopDrop } from './dnd';
+import { locateCard } from './hooks/boardReducer';
+import { useBoard, type MoveResult } from './hooks/useBoard';
+import type { Card, ColumnId, DeletedCard } from './types';
 
 /** Which control inside a card should receive focus after the next render. */
 interface FocusRequest {
@@ -11,13 +13,30 @@ interface FocusRequest {
   target: string;
 }
 
+interface DropTarget {
+  column: ColumnId;
+  slot: number;
+}
+
+function moveMessage({ card, column, index, total }: MoveResult): string {
+  return `Moved "${card.title}" to ${columnTitle(column)}, position ${index + 1} of ${total}.`;
+}
+
 export default function KanbanPage() {
-  const { board, addCard, editCard, deleteCard, restoreCard } = useBoard();
+  const { board, addCard, editCard, deleteCard, restoreCard, moveCard } = useBoard();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deleted, setDeleted] = useState<DeletedCard | null>(null);
   const [announcement, setAnnouncement] = useState('');
   const [focusRequest, setFocusRequest] = useState<FocusRequest | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<DropTarget | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
+  const dragFrom = draggingId ? locateCard(board, draggingId) : null;
+  // Hide the indicator where a drop would not move the card.
+  const visibleDrop =
+    dropTarget && dragFrom && !isNoopDrop(dragFrom, dropTarget.column, dropTarget.slot)
+      ? dropTarget
+      : null;
 
   // Cards remount when they change column or leave edit mode, so focus is restored explicitly.
   useEffect(() => {
@@ -46,12 +65,33 @@ export default function KanbanPage() {
     setAnnouncement(`Deleted "${card.title}".`);
   }
 
+  function endDrag() {
+    setDraggingId(null);
+    setDropTarget(null);
+  }
+
+  function handleDrop(column: ColumnId, slot: number) {
+    const id = draggingId;
+    const from = id ? locateCard(board, id) : null;
+    endDrag();
+    if (!id || !from) return;
+    const result = moveCard(id, column, dropToMoveIndex(from, column, slot));
+    if (result) setAnnouncement(moveMessage(result));
+  }
+
   function handleUndo() {
     if (!deleted) return;
     restoreCard(deleted);
     setDeleted(null);
     setAnnouncement(`Restored "${deleted.card.title}".`);
     setFocusRequest({ cardId: deleted.card.id, target: 'edit' });
+  }
+
+  function dropIndicatorFor(column: ColumnId, index: number, total: number) {
+    if (visibleDrop?.column !== column) return null;
+    if (visibleDrop.slot === index) return 'before';
+    if (visibleDrop.slot === total && index === total - 1) return 'after';
+    return null;
   }
 
   return (
@@ -70,7 +110,18 @@ export default function KanbanPage() {
               const card = addCard(column.id, draft);
               setAnnouncement(`Added "${card.title}" to ${column.title}.`);
             }}
-            renderCard={(card) => (
+            isDragActive={draggingId !== null}
+            dropSlot={visibleDrop?.column === column.id ? visibleDrop.slot : null}
+            onDragOverSlot={(slot) => {
+              if (dropTarget?.column !== column.id || dropTarget.slot !== slot) {
+                setDropTarget({ column: column.id, slot });
+              }
+            }}
+            onDragLeave={() => {
+              if (dropTarget?.column === column.id) setDropTarget(null);
+            }}
+            onDropAt={(slot) => handleDrop(column.id, slot)}
+            renderCard={(card, index) => (
               <CardItem
                 key={card.id}
                 card={card}
@@ -87,6 +138,10 @@ export default function KanbanPage() {
                   setFocusRequest({ cardId: card.id, target: 'edit' });
                 }}
                 onDelete={() => handleDelete(card)}
+                isDragging={draggingId === card.id}
+                dropIndicator={dropIndicatorFor(column.id, index, board.columns[column.id].length)}
+                onDragStart={() => setDraggingId(card.id)}
+                onDragEnd={endDrag}
               />
             )}
           />
