@@ -3,6 +3,11 @@ import { renderRoute } from '@/test/renderRoute';
 import { advance, makeSnapshot, serveDashboard, setTabVisibility } from './testing';
 
 describe('Live dashboard polling', () => {
+  // The route lazy-loads Page; warm the module so the first test isn't racing a cold import.
+  beforeAll(async () => {
+    await import('./Page');
+  });
+
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     setTabVisibility('visible');
