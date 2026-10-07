@@ -8,10 +8,10 @@ its own pull request into `main`.
 | #   | Question                                    | PR Link                                                        |
 | --- | ------------------------------------------- | -------------------------------------------------------------- |
 | 1   | Shopping cart (`/cart`)                     | [#4](https://github.com/aryan-edstem/fe-interview-prep/pull/4) |
-| 2   | Infinite feed (`/feed`)                     | —                                                              |
-| 3   | Kanban board (`/kanban`)                    | —                                                              |
-| 4   | Live dashboard (`/dashboard`)               | —                                                              |
-| 5   | Comments with offline support (`/comments`) | —                                                              |
+| 2   | Infinite feed (`/feed`)                     | [#3](https://github.com/aryan-edstem/fe-interview-prep/pull/3) |
+| 3   | Kanban board (`/kanban`)                    | [#6](https://github.com/aryan-edstem/fe-interview-prep/pull/6) |
+| 4   | Live dashboard (`/dashboard`)               | [#7](https://github.com/aryan-edstem/fe-interview-prep/pull/7) |
+| 5   | Comments with offline support (`/comments`) | [#5](https://github.com/aryan-edstem/fe-interview-prep/pull/5) |
 
 ## Stack
 
