@@ -166,6 +166,30 @@ describe('Kanban board', () => {
     expectCount('To do', 3);
   });
 
+  it('moves focus to the next card after dismissing the undo bar', async () => {
+    const { user } = await renderBoard();
+    await addCard(user, 'To do', 'Keep');
+    await addCard(user, 'To do', 'Oops');
+    await addCard(user, 'To do', 'Last');
+
+    await user.click(within(card('Oops')).getByRole('button', { name: 'Delete Oops' }));
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+    expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument();
+    expect(within(card('Last')).getByRole('button', { name: 'Edit Last' })).toHaveFocus();
+  });
+
+  it('moves focus to the add button after dismissing when the column is empty', async () => {
+    const { user } = await renderBoard();
+    await addCard(user, 'Done', 'Only');
+    await user.click(within(column('Done')).getByRole('button', { name: 'Cancel' }));
+
+    await user.click(within(card('Only')).getByRole('button', { name: 'Delete Only' }));
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+
+    expect(screen.getByRole('button', { name: '+ Add card to Done' })).toHaveFocus();
+  });
+
   it('keeps the board after a remount (page refresh)', async () => {
     const first = await renderBoard();
     await addCard(first.user, 'Done', 'Persist me', 'Across reloads');

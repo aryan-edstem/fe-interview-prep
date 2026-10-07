@@ -8,11 +8,13 @@ import { locateCard } from './hooks/boardReducer';
 import { useBoard, type MoveResult } from './hooks/useBoard';
 import type { Card, CardLocation, ColumnId, DeletedCard } from './types';
 
-/** Which control inside a card should receive focus after the next render. */
-interface FocusRequest {
-  cardId: string;
-  target: string;
-}
+/**
+ * What should receive focus after the next render: a control inside a card, or (when a card is
+ * gone) whatever now sits at a position in a column.
+ */
+type FocusRequest =
+  | { kind: 'card'; cardId: string; target: string }
+  | { kind: 'slot'; column: ColumnId; index: number };
 
 interface DropTarget {
   column: ColumnId;
@@ -73,9 +75,23 @@ export default function KanbanPage() {
   // Cards remount when they change column or leave edit mode, so focus is restored explicitly.
   useEffect(() => {
     if (!focusRequest) return;
+    if (focusRequest.kind === 'slot') {
+      // Focus the card now at that position (or the one before it), else the column's add button.
+      const columnEl = Array.from(
+        boardRef.current?.querySelectorAll<HTMLElement>('[data-column-id]') ?? [],
+      ).find((el) => el.dataset.columnId === focusRequest.column);
+      const cards = Array.from(columnEl?.querySelectorAll<HTMLElement>('[data-card-id]') ?? []);
+      const cardEl = cards[Math.min(focusRequest.index, cards.length - 1)];
+      const target =
+        cardEl?.querySelector<HTMLElement>('[data-focus="edit"]') ??
+        columnEl?.querySelector<HTMLElement>('[data-focus="add"]');
+      target?.focus();
+      return;
+    }
+    const { cardId } = focusRequest;
     const cardEl = Array.from(
       boardRef.current?.querySelectorAll<HTMLElement>('[data-card-id]') ?? [],
-    ).find((el) => el.dataset.cardId === focusRequest.cardId);
+    ).find((el) => el.dataset.cardId === cardId);
     const preferred = cardEl?.querySelector<HTMLButtonElement>(
       `[data-focus="${focusRequest.target}"]`,
     );
@@ -106,7 +122,7 @@ export default function KanbanPage() {
     if (!result) return;
     setAnnouncement(moveMessage(result));
     // The card may have remounted in another column; keep focus on the same move button.
-    setFocusRequest({ cardId: card.id, target: direction });
+    setFocusRequest({ kind: 'card', cardId: card.id, target: direction });
   }
 
   function endDrag() {
@@ -123,12 +139,19 @@ export default function KanbanPage() {
     if (result) setAnnouncement(moveMessage(result));
   }
 
+  function handleDismiss() {
+    if (!deleted) return;
+    setDeleted(null);
+    // The Dismiss button is about to unmount; hand focus back to where the card used to be.
+    setFocusRequest({ kind: 'slot', ...deleted.location });
+  }
+
   function handleUndo() {
     if (!deleted) return;
     restoreCard(deleted);
     setDeleted(null);
     setAnnouncement(`Restored "${deleted.card.title}".`);
-    setFocusRequest({ cardId: deleted.card.id, target: 'edit' });
+    setFocusRequest({ kind: 'card', cardId: deleted.card.id, target: 'edit' });
   }
 
   function dropIndicatorFor(column: ColumnId, index: number, total: number) {
@@ -184,13 +207,13 @@ export default function KanbanPage() {
                 onEdit={() => setEditingId(card.id)}
                 onCancelEdit={() => {
                   setEditingId(null);
-                  setFocusRequest({ cardId: card.id, target: 'edit' });
+                  setFocusRequest({ kind: 'card', cardId: card.id, target: 'edit' });
                 }}
                 onSave={(draft) => {
                   editCard(card.id, draft);
                   setEditingId(null);
                   setAnnouncement(`Saved "${draft.title}".`);
-                  setFocusRequest({ cardId: card.id, target: 'edit' });
+                  setFocusRequest({ kind: 'card', cardId: card.id, target: 'edit' });
                 }}
                 onDelete={() => handleDelete(card)}
                 isDragging={draggingId === card.id}
@@ -208,7 +231,7 @@ export default function KanbanPage() {
                     onToggle={() => setMoveMenuFor((open) => (open === card.id ? null : card.id))}
                     onClose={() => {
                       setMoveMenuFor(null);
-                      setFocusRequest({ cardId: card.id, target: 'fallback' });
+                      setFocusRequest({ kind: 'card', cardId: card.id, target: 'fallback' });
                     }}
                     onMove={(direction) => handleKeyboardMove(card, direction)}
                   />
@@ -235,7 +258,7 @@ export default function KanbanPage() {
             </button>
             <button
               type="button"
-              onClick={() => setDeleted(null)}
+              onClick={handleDismiss}
               className="btn btn-ghost btn-sm text-brand-700 hover:bg-brand-100"
             >
               Dismiss
