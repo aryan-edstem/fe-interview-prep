@@ -5,4 +5,5 @@ export const meta: QuestionMeta = {
   slug: 'cart',
   title: 'Shopping cart',
   summary: 'Product list with a persisted cart, stock-capped quantities and 18% tax.',
+  tags: ['useReducer', 'localStorage', 'Integer money'],
 };

@@ -15,13 +15,28 @@ export default function CartPage() {
   }, [state, reconcile]);
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-bold">Shopping cart</h1>
-      <div className="grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-start">
+    <div className="page">
+      <header className="page-header">
+        <div>
+          <p className="page-eyebrow">Question 1</p>
+          <h1 className="page-title">Shopping cart</h1>
+          <p className="page-description">
+            Add products, adjust quantities up to what is in stock, and see subtotal, 18% tax and
+            total update instantly. Your cart is saved in this browser.
+          </p>
+        </div>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start xl:gap-8">
         <section aria-labelledby="products-heading">
-          <h2 id="products-heading" className="mb-3 text-lg font-semibold">
-            Products
-          </h2>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h2 id="products-heading" className="section-title">
+              Products
+            </h2>
+            {state.kind === 'success' && state.products.length > 0 && (
+              <span className="badge badge-neutral">{state.products.length} products</span>
+            )}
+          </div>
           <ProductList
             state={state}
             onRetry={retry}
@@ -29,7 +44,7 @@ export default function CartPage() {
             onAdd={cart.add}
           />
         </section>
-        <div className="lg:sticky lg:top-6">
+        <div className="lg:sticky lg:top-10">
           <Cart lines={cart.lines} onQuantityChange={cart.setQuantity} onRemove={cart.remove} />
         </div>
       </div>

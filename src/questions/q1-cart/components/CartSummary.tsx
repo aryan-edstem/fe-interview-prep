@@ -12,20 +12,20 @@ export function CartSummary({ totals }: CartSummaryProps) {
       aria-live="polite"
       aria-atomic="true"
       aria-label="Cart totals"
-      className="mt-3 border-t border-slate-200 pt-3 text-sm"
+      className="rounded-b-xl border-t border-slate-200 bg-slate-50 px-4 py-4 text-sm sm:px-5"
     >
-      <dl className="space-y-1">
-        <div className="flex justify-between">
+      <dl className="space-y-2">
+        <div className="flex justify-between text-slate-600">
           <dt>
             Subtotal ({totals.itemCount} {totals.itemCount === 1 ? 'item' : 'items'})
           </dt>
-          <dd className="tabular-nums">{formatCents(totals.subtotalCents)}</dd>
+          <dd className="text-slate-900 tabular-nums">{formatCents(totals.subtotalCents)}</dd>
         </div>
         <div className="flex justify-between text-slate-600">
           <dt>Tax ({TAX_RATE_PERCENT}%)</dt>
-          <dd className="tabular-nums">{formatCents(totals.taxCents)}</dd>
+          <dd className="text-slate-900 tabular-nums">{formatCents(totals.taxCents)}</dd>
         </div>
-        <div className="flex justify-between text-base font-semibold">
+        <div className="flex justify-between border-t border-slate-200 pt-3 text-base font-semibold">
           <dt>Total</dt>
           <dd className="tabular-nums">{formatCents(totals.totalCents)}</dd>
         </div>

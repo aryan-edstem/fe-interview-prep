@@ -7,54 +7,60 @@ export interface CartLineItemProps {
   onRemove: (id: number) => void;
 }
 
-const stepButton =
-  'flex size-7 items-center justify-center rounded-md border border-slate-300 text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40';
+const stepButton = 'btn btn-ghost btn-icon rounded-none text-base';
 
 export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemProps) {
   const atMax = line.quantity >= line.stock;
   const maxHintId = `cart-line-${line.id}-max`;
 
   return (
-    <li className="flex gap-3 py-3">
+    <li className="flex gap-3 py-4">
       <img
         src={line.thumbnail}
         alt=""
-        width={48}
-        height={48}
-        className="size-12 shrink-0 rounded object-contain"
+        width={56}
+        height={56}
+        className="size-14 shrink-0 rounded-lg border border-slate-100 bg-slate-50 object-cover"
       />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{line.title}</p>
+        <div className="flex items-start justify-between gap-2">
+          <p className="line-clamp-2 text-sm font-medium">{line.title}</p>
+          <p className="text-sm font-semibold tabular-nums">
+            {formatCents(line.priceCents * line.quantity)}
+          </p>
+        </div>
         <p className="text-xs text-slate-500">{formatCents(line.priceCents)} each</p>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <div className="inline-flex items-center overflow-hidden rounded-lg border border-slate-300 bg-white shadow-sm">
+            <button
+              type="button"
+              className={stepButton}
+              aria-label={`Decrease quantity of ${line.title}`}
+              disabled={line.quantity <= 1}
+              onClick={() => onQuantityChange(line.id, line.quantity - 1)}
+            >
+              −
+            </button>
+            <output
+              className="w-8 border-x border-slate-200 text-center text-sm leading-8 font-medium tabular-nums"
+              aria-label={`Quantity of ${line.title}`}
+            >
+              {line.quantity}
+            </output>
+            <button
+              type="button"
+              className={stepButton}
+              aria-label={`Increase quantity of ${line.title}`}
+              aria-describedby={atMax ? maxHintId : undefined}
+              disabled={atMax}
+              onClick={() => onQuantityChange(line.id, line.quantity + 1)}
+            >
+              +
+            </button>
+          </div>
           <button
             type="button"
-            className={stepButton}
-            aria-label={`Decrease quantity of ${line.title}`}
-            disabled={line.quantity <= 1}
-            onClick={() => onQuantityChange(line.id, line.quantity - 1)}
-          >
-            −
-          </button>
-          <output
-            className="w-6 text-center text-sm tabular-nums"
-            aria-label={`Quantity of ${line.title}`}
-          >
-            {line.quantity}
-          </output>
-          <button
-            type="button"
-            className={stepButton}
-            aria-label={`Increase quantity of ${line.title}`}
-            aria-describedby={atMax ? maxHintId : undefined}
-            disabled={atMax}
-            onClick={() => onQuantityChange(line.id, line.quantity + 1)}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            className="ml-auto text-xs text-red-700 hover:underline"
+            className="btn btn-ghost btn-sm text-rose-600 hover:bg-rose-50 hover:text-rose-700"
             aria-label={`Remove ${line.title}`}
             onClick={() => onRemove(line.id)}
           >
@@ -62,14 +68,13 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
           </button>
         </div>
         {atMax && (
-          <p id={maxHintId} className="mt-1 text-xs text-amber-700">
-            Max {line.stock} in stock
+          <p className="mt-2">
+            <span id={maxHintId} className="badge badge-warning">
+              Max {line.stock} in stock
+            </span>
           </p>
         )}
       </div>
-      <p className="text-sm font-semibold tabular-nums">
-        {formatCents(line.priceCents * line.quantity)}
-      </p>
     </li>
   );
 }
