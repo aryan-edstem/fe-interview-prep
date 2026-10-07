@@ -21,6 +21,17 @@ export interface FeedStore {
   abort: () => void;
 }
 
+/** Appends `incoming`, skipping any post already shown (pages can overlap if the data shifts). */
+export function mergePosts(existing: Post[], incoming: Post[]): Post[] {
+  const seen = new Set(existing.map((post) => post.id));
+  const fresh = incoming.filter((post) => {
+    if (seen.has(post.id)) return false;
+    seen.add(post.id);
+    return true;
+  });
+  return fresh.length === 0 ? existing : [...existing, ...fresh];
+}
+
 const initialState: FeedState = { posts: [], nextSkip: 0, status: { kind: 'idle' } };
 
 /**
@@ -38,16 +49,20 @@ export function createFeedStore(fetchPage: FetchPage = fetchPostsPage): FeedStor
   }
 
   async function requestNextPage() {
+    // A page is already on its way: never ask for the same page twice.
+    if (controller) return;
     const request = new AbortController();
     controller = request;
     setState({ ...state, status: { kind: 'loading' } });
     try {
       const page = await fetchPage(state.nextSkip, request.signal);
       if (request.signal.aborted) return;
+      const nextSkip = page.skip + page.posts.length;
+      const reachedEnd = page.posts.length === 0 || nextSkip >= page.total;
       setState({
-        posts: [...state.posts, ...page.posts],
-        nextSkip: page.skip + page.posts.length,
-        status: { kind: 'idle' },
+        posts: mergePosts(state.posts, page.posts),
+        nextSkip,
+        status: reachedEnd ? { kind: 'end' } : { kind: 'idle' },
       });
     } catch (error) {
       if (request.signal.aborted) return;
