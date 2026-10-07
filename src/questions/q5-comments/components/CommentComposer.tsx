@@ -1,9 +1,11 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent, type KeyboardEvent } from 'react';
 
 export interface CommentComposerProps {
   online: boolean;
   onSubmit: (body: string) => void;
 }
+
+const MAX_LENGTH = 1000;
 
 export function CommentComposer({ online, onSubmit }: CommentComposerProps) {
   const [body, setBody] = useState('');
@@ -17,12 +19,17 @@ export function CommentComposer({ online, onSubmit }: CommentComposerProps) {
     setBody('');
   }
 
+  // Ctrl/Cmd+Enter posts, the usual shortcut for multi-line comment boxes.
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
+  }
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
-    >
-      <label htmlFor={`${id}-body`} className="block text-sm font-medium text-slate-900">
+    <form onSubmit={handleSubmit}>
+      <label htmlFor={`${id}-body`} className="label">
         Add a comment
       </label>
       <textarea
@@ -30,21 +37,22 @@ export function CommentComposer({ online, onSubmit }: CommentComposerProps) {
         aria-describedby={`${id}-hint`}
         value={body}
         onChange={(e) => setBody(e.target.value)}
+        onKeyDown={handleKeyDown}
         rows={3}
-        maxLength={1000}
-        className="mt-2 w-full resize-y rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+        maxLength={MAX_LENGTH}
+        placeholder="Share an update or ask a question…"
+        className="input resize-y"
       />
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <p id={`${id}-hint`} className="text-xs text-slate-500">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <p id={`${id}-hint`} className="field-hint mt-0">
           {online
-            ? 'Comments appear right away and are confirmed once the server saves them.'
+            ? 'Ctrl/Cmd + Enter to post. Comments appear right away and are confirmed once saved.'
             : "You're offline — comments are queued and sent when you reconnect."}
+          <span className="ml-2 text-slate-400 tabular-nums">
+            {body.length}/{MAX_LENGTH}
+          </span>
         </p>
-        <button
-          type="submit"
-          disabled={!trimmed}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <button type="submit" disabled={!trimmed} className="btn btn-primary">
           Post comment
         </button>
       </div>

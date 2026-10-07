@@ -215,3 +215,14 @@ test('a failed comment the server already saved does not stall the queue', async
   expect(within(commentList()).getAllByText('Saved already')).toHaveLength(1);
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
 });
+
+test('posts with Ctrl+Enter from the comment box', async () => {
+  const { user } = await renderThread();
+  const box = screen.getByRole('textbox', { name: /add a comment/i });
+
+  await user.type(box, 'Keyboard first');
+  await user.keyboard('{Control>}{Enter}{/Control}');
+
+  expect(await within(commentList()).findByText('Keyboard first')).toBeInTheDocument();
+  expect(box).toHaveValue('');
+});
