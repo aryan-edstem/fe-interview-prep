@@ -7,40 +7,31 @@ export interface StatusBadgeProps {
   blocked?: boolean;
 }
 
-const tone: Record<OutboxStatus, string> = {
-  sent: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
-  sending: 'bg-sky-50 text-sky-800 ring-sky-200',
-  queued: 'bg-amber-50 text-amber-900 ring-amber-200',
-  failed: 'bg-red-50 text-red-800 ring-red-200',
-};
-
-function statusLabel({ status, online, blocked = false }: StatusBadgeProps): string {
+function describe({ status, online, blocked = false }: StatusBadgeProps) {
   switch (status) {
     case 'sent':
-      return 'Sent';
+      return { label: 'Sent', tone: 'badge-success' };
     case 'sending':
-      return 'Sending…';
+      return { label: 'Sending…', tone: 'badge-brand' };
     case 'failed':
-      return 'Failed to send';
+      return { label: 'Failed to send', tone: 'badge-danger' };
     case 'queued':
-      if (!online) return 'Queued — offline';
-      return blocked ? 'Queued — waiting for an earlier comment' : 'Queued';
+      if (!online) return { label: 'Queued — offline', tone: 'badge-warning' };
+      return blocked
+        ? { label: 'Queued — waiting for an earlier comment', tone: 'badge-neutral' }
+        : { label: 'Queued', tone: 'badge-neutral' };
   }
 }
 
-/** Status as text (colour is only a secondary cue). */
+/** Status as text; colour and the spinner are secondary cues. */
 export function StatusBadge(props: StatusBadgeProps) {
+  const { label, tone } = describe(props);
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${tone[props.status]}`}
-    >
+    <span className={`badge ${tone}`}>
       {props.status === 'sending' && (
-        <span
-          aria-hidden="true"
-          className="size-2 animate-pulse rounded-full bg-current motion-reduce:animate-none"
-        />
+        <span aria-hidden="true" className="spinner size-3 border-[1.5px]" />
       )}
-      {statusLabel(props)}
+      {label}
     </span>
   );
 }
