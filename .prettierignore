@@ -3,3 +3,4 @@ coverage
 pnpm-lock.yaml
 docs/screenshots
 .worktrees
+public/mockServiceWorker.js
