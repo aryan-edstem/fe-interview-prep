@@ -6,4 +6,5 @@ export const meta: QuestionMeta = {
   title: 'Live dashboard',
   summary:
     'Sales, active users and recent orders refreshed every 5 seconds, paused while the tab is hidden.',
+  tags: ['Polling', 'Page Visibility API', 'React.memo'],
 };

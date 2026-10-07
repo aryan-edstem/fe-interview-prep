@@ -9,20 +9,20 @@ interface WidgetCardProps {
   children: ReactNode;
 }
 
-/** Shared chrome for a dashboard widget: a labelled region with a heading. */
+/** Shared chrome for a dashboard widget: a labelled card with its own "Updated" time. */
 export function WidgetCard({ title, updatedAt, className = '', children }: WidgetCardProps) {
   const headingId = useId();
   return (
-    <section
-      aria-labelledby={headingId}
-      className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`}
-    >
-      <header className="mb-3 flex items-baseline justify-between gap-2">
-        <h2 id={headingId} className="text-sm font-medium text-slate-600">
+    <section aria-labelledby={headingId} className={`card card-body flex flex-col ${className}`}>
+      <header className="mb-4 flex items-baseline justify-between gap-3">
+        <h2 id={headingId} className="text-sm font-medium text-slate-500">
           {title}
         </h2>
-        <p className="text-xs text-slate-500">
-          Updated <time dateTime={toIsoString(updatedAt)}>{formatTime(updatedAt)}</time>
+        <p className="text-xs whitespace-nowrap text-slate-500">
+          Updated{' '}
+          <time dateTime={toIsoString(updatedAt)} className="tabular-nums">
+            {formatTime(updatedAt)}
+          </time>
         </p>
       </header>
       {children}

@@ -11,6 +11,29 @@ import { useWidgetPreferences } from './hooks/useWidgetPreferences';
 
 const POLL_INTERVAL_MS = 5_000;
 
+function DashboardSkeleton() {
+  return (
+    <div role="status" className="grid gap-4 lg:grid-cols-3">
+      <span className="sr-only">Loading dashboard…</span>
+      <div aria-hidden="true" className="card card-body space-y-4">
+        <div className="skeleton h-4 w-24" />
+        <div className="skeleton h-10 w-44" />
+        <div className="skeleton h-4 w-32" />
+      </div>
+      <div aria-hidden="true" className="card card-body space-y-4 lg:col-span-2">
+        <div className="skeleton h-4 w-28" />
+        <div className="skeleton h-40" />
+      </div>
+      <div aria-hidden="true" className="card card-body space-y-3 lg:col-span-3">
+        <div className="skeleton h-4 w-32" />
+        <div className="skeleton h-8" />
+        <div className="skeleton h-8" />
+        <div className="skeleton h-8" />
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const visible = usePageVisible();
   const state = useLiveData(fetchDashboard, {
@@ -22,34 +45,32 @@ export default function DashboardPage() {
   const noneVisible = !visibility.sales && !visibility.activeUsers && !visibility.recentOrders;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-semibold text-slate-900">Live dashboard</h1>
-        <p className="text-sm text-slate-600">
-          Sales, active users and the latest orders, refreshed every 5 seconds while this tab is
-          visible.
-        </p>
-        {state.kind === 'ready' && (
-          <LiveStatus updatedAt={state.data.generatedAt} error={state.error} paused={!visible} />
-        )}
+    <div className="page">
+      <header className="page-header">
+        <div className="min-w-0 flex-1 basis-80">
+          <p className="page-eyebrow">Question 4</p>
+          <h1 className="page-title">Live dashboard</h1>
+          <p className="page-description">
+            Sales, active users and the latest orders, refreshed every 5 seconds while this tab is
+            visible.
+          </p>
+        </div>
+        <div className="flex flex-col gap-3 lg:items-end">
+          {state.kind === 'ready' && (
+            <LiveStatus updatedAt={state.data.generatedAt} error={state.error} paused={!visible} />
+          )}
+          <WidgetToggles visibility={visibility} onChange={setWidgetVisible} />
+        </div>
       </header>
 
-      <WidgetToggles visibility={visibility} onChange={setWidgetVisible} />
-
-      {state.kind === 'loading' && (
-        <p role="status" className="text-sm text-slate-600">
-          Loading dashboard…
-        </p>
-      )}
+      {state.kind === 'loading' && <DashboardSkeleton />}
       {state.kind === 'error' && (
-        <p role="alert" className="rounded-lg bg-red-50 p-4 text-sm text-red-800">
+        <p role="alert" className="alert alert-danger">
           Couldn&apos;t load the dashboard: {state.message}. Retrying automatically.
         </p>
       )}
       {state.kind === 'ready' && noneVisible && (
-        <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">
-          All widgets are hidden. Tick one above to bring it back.
-        </p>
+        <p className="empty-state">All widgets are hidden. Turn one back on above.</p>
       )}
       {state.kind === 'ready' && !noneVisible && (
         <div className="grid gap-4 lg:grid-cols-3">
