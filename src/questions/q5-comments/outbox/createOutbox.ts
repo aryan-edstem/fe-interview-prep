@@ -19,6 +19,12 @@ export interface Outbox {
   retry: (clientId: string) => void;
   /** Drops a failed comment from the queue. */
   discard: (clientId: string) => void;
+  /**
+   * Marks every unsent item the server already has as sent, then resumes sending. Without this, a
+   * comment saved on a request whose response was lost would stay `failed` locally and block the
+   * queue even though the thread shows it as confirmed.
+   */
+  acknowledge: (serverComments: readonly Comment[]) => void;
   /** Sends the next queued comment, if online and nothing is already in flight. */
   flush: () => void;
   /** Begins processing (on mount). */
@@ -117,7 +123,8 @@ export function createOutbox({
     }
     if (mySession !== session) return;
     inFlight = null;
-    replace(item.clientId, () => next);
+    // `acknowledge` may have confirmed it from the server list while the request was in flight.
+    replace(item.clientId, (current) => (current.status === 'sent' ? current : next));
     flush();
   }
 
@@ -163,6 +170,19 @@ export function createOutbox({
       const target = items.find((item) => item.clientId === clientId);
       if (target?.status !== 'failed') return;
       setItems(items.filter((item) => item.clientId !== clientId));
+      flush();
+    },
+    acknowledge(serverComments) {
+      const saved = new Map(serverComments.map((comment) => [comment.clientId, comment]));
+      if (!items.some((item) => item.status !== 'sent' && saved.has(item.clientId))) return;
+      setItems(
+        items.map((item) => {
+          const comment = saved.get(item.clientId);
+          return item.status === 'sent' || !comment
+            ? item
+            : { ...toDraft(item), createdAt: item.createdAt, status: 'sent', comment };
+        }),
+      );
       flush();
     },
     flush,

@@ -4,6 +4,7 @@ import { http } from 'msw';
 import { renderRoute } from '@/test/renderRoute';
 import { server } from '@/test/setup';
 import { getMockComments, mockCommentsConfig, resetMockComments } from './mocks';
+import { OUTBOX_STORAGE_KEY } from './outbox/createOutbox';
 
 const SEED_BODY = /shipped the new onboarding flow/i;
 
@@ -179,4 +180,38 @@ test('shows a load error with a retry', async () => {
   await user.click(screen.getByRole('button', { name: /try again/i }));
 
   expect(await screen.findByText(SEED_BODY)).toBeInTheDocument();
+});
+
+test('a failed comment the server already saved does not stall the queue', async () => {
+  // The server kept "x" (e.g. saved, then the response failed) but this device still holds it as
+  // failed, with "y" queued behind it — the state a refresh after a lost response leaves behind.
+  await fetch('/api/comments', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Idempotency-Key': 'x' },
+    body: JSON.stringify({ clientId: 'x', author: 'You', body: 'Saved already' }),
+  });
+  const createdAt = '2026-10-07T09:00:00.000Z';
+  localStorage.setItem(
+    OUTBOX_STORAGE_KEY,
+    JSON.stringify([
+      {
+        clientId: 'x',
+        author: 'You',
+        body: 'Saved already',
+        createdAt,
+        status: 'failed',
+        error: 'Gateway timeout',
+      },
+      { clientId: 'y', author: 'You', body: 'Written after', createdAt, status: 'queued' },
+    ]),
+  );
+  postKeys = [];
+
+  await renderThread();
+
+  await waitFor(() => expect(within(commentList()).getAllByText('Sent')).toHaveLength(2));
+  expect(postKeys).toEqual(['y']);
+  expect(newServerComments().map((c) => c.body)).toEqual(['Saved already', 'Written after']);
+  expect(within(commentList()).getAllByText('Saved already')).toHaveLength(1);
+  expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument();
 });

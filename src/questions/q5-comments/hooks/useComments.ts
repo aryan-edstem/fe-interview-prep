@@ -62,7 +62,11 @@ export function useComments() {
   useEffect(() => {
     const controller = new AbortController();
     fetchComments(controller.signal).then(
-      (comments) => setLoad({ kind: 'loaded', comments }),
+      (comments) => {
+        // Reconcile first, so the thread and the send queue agree on what the server has.
+        outbox.acknowledge(comments);
+        setLoad({ kind: 'loaded', comments });
+      },
       (err: unknown) => {
         if (controller.signal.aborted) return;
         setLoad({
@@ -72,7 +76,7 @@ export function useComments() {
       },
     );
     return () => controller.abort();
-  }, [loadAttempt]);
+  }, [loadAttempt, outbox]);
 
   const reload = useCallback(() => {
     setLoad({ kind: 'loading' });
