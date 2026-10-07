@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useFeed } from '../hooks/useFeed';
+import { useNearBottom } from '../hooks/useNearBottom';
 import { PostCard } from './PostCard';
 
 export function FeedList() {
   const { posts, status, loadMore } = useFeed();
   const isEmpty = posts.length === 0;
+  const sentinelRef = useNearBottom<HTMLDivElement>(loadMore, { enabled: status.kind === 'idle' });
 
   // Only the very first visit starts from scratch; coming back from a post keeps what's loaded.
   useEffect(() => {
@@ -21,8 +23,9 @@ export function FeedList() {
           </li>
         ))}
       </ul>
+      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
       <div role="status" aria-live="polite" className="py-6 text-center text-sm text-slate-600">
-        {status.kind === 'loading' && isEmpty && 'Loading posts...'}
+        {status.kind === 'loading' && (isEmpty ? 'Loading posts...' : 'Loading more posts...')}
       </div>
     </section>
   );
