@@ -3,9 +3,11 @@ import type { Product } from '../types';
 
 export interface ProductCardProps {
   product: Product;
+  quantityInCart: number;
+  onAdd: (product: Product) => void;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, quantityInCart, onAdd }: ProductCardProps) {
   return (
     <article className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-3">
       <img
@@ -21,6 +23,16 @@ export function ProductCard({ product }: ProductCardProps) {
       <p className="text-xs text-slate-500">
         {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
       </p>
+      <div className="mt-auto pt-3">
+        <button
+          type="button"
+          onClick={() => onAdd(product)}
+          aria-label={`Add ${product.title} to cart`}
+          className="w-full rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
+        >
+          {quantityInCart > 0 ? `Add another (${quantityInCart} in cart)` : 'Add to cart'}
+        </button>
+      </div>
     </article>
   );
 }

@@ -1,12 +1,15 @@
 import type { ProductsState } from '../hooks/useProducts';
+import type { Product } from '../types';
 import { ProductCard } from './ProductCard';
 
 export interface ProductListProps {
   state: ProductsState;
   onRetry: () => void;
+  quantities: ReadonlyMap<number, number>;
+  onAdd: (product: Product) => void;
 }
 
-export function ProductList({ state, onRetry }: ProductListProps) {
+export function ProductList({ state, onRetry, quantities, onAdd }: ProductListProps) {
   if (state.kind === 'loading') {
     return (
       <p role="status" className="text-slate-600">
@@ -38,7 +41,11 @@ export function ProductList({ state, onRetry }: ProductListProps) {
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
       {state.products.map((product) => (
         <li key={product.id}>
-          <ProductCard product={product} />
+          <ProductCard
+            product={product}
+            quantityInCart={quantities.get(product.id) ?? 0}
+            onAdd={onAdd}
+          />
         </li>
       ))}
     </ul>
