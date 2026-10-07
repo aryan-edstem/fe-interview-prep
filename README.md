@@ -5,13 +5,13 @@ its own pull request into `main`.
 
 ## Questions
 
-| #   | Question                                    | PR Link |
-| --- | ------------------------------------------- | ------- |
-| 1   | Shopping cart (`/cart`)                     | —       |
-| 2   | Infinite feed (`/feed`)                     | —       |
-| 3   | Kanban board (`/kanban`)                    | —       |
-| 4   | Live dashboard (`/dashboard`)               | —       |
-| 5   | Comments with offline support (`/comments`) | —       |
+| #   | Question                                    | PR Link                                                        |
+| --- | ------------------------------------------- | -------------------------------------------------------------- |
+| 1   | Shopping cart (`/cart`)                     | [#4](https://github.com/aryan-edstem/fe-interview-prep/pull/4) |
+| 2   | Infinite feed (`/feed`)                     | —                                                              |
+| 3   | Kanban board (`/kanban`)                    | —                                                              |
+| 4   | Live dashboard (`/dashboard`)               | —                                                              |
+| 5   | Comments with offline support (`/comments`) | —                                                              |
 
 ## Stack
 
