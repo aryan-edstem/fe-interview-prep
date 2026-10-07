@@ -9,7 +9,8 @@ export const routes: RouteObject[] = [
     element: <Layout />,
     children: [
       { index: true, element: <HomePage /> },
-      ...questions.map(({ slug, Page }) => ({ path: slug, element: <Page /> })),
+      // `/*` lets a question own sub-routes (e.g. `/feed/:id`) with its own `<Routes>`.
+      ...questions.map(({ slug, Page }) => ({ path: `${slug}/*`, element: <Page /> })),
       { path: '*', element: <NotFoundPage /> },
     ],
   },
