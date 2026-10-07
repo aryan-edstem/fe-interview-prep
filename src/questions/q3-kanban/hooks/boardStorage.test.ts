@@ -12,6 +12,11 @@ const valid: BoardState = {
 
 afterEach(() => localStorage.clear());
 
+function loadBoardFrom(raw: string) {
+  localStorage.setItem(STORAGE_KEY, raw);
+  return loadBoard();
+}
+
 describe('parseBoard', () => {
   it('accepts a well-formed board', () => {
     expect(parseBoard(structuredClone(valid))).toEqual(valid);
@@ -38,6 +43,31 @@ describe('parseBoard', () => {
     ],
   ])('rejects %s', (_label, value) => {
     expect(parseBoard(value)).toBeNull();
+  });
+
+  it.each(['__proto__', 'constructor', 'toString'])(
+    'rejects the prototype key %s as a card id',
+    (key) => {
+      // JSON.parse creates "__proto__" as an own property, exactly like a tampered save would.
+      const saved = JSON.parse(
+        JSON.stringify({ cards: {}, columns: { todo: [key], inProgress: [], done: [] } }).replace(
+          '"cards":{}',
+          `"cards":{"${key}":{"id":"${key}","title":"Evil","description":""}}`,
+        ),
+      );
+      expect(parseBoard(saved)).toBeNull();
+    },
+  );
+
+  it('rejects a column id that only matches an inherited member', () => {
+    expect(
+      parseBoard({ cards: {}, columns: { todo: ['toString'], inProgress: [], done: [] } }),
+    ).toBeNull();
+  });
+
+  it('never pollutes Object.prototype', () => {
+    loadBoardFrom('{"cards":{"__proto__":{"polluted":true}},"columns":{}}');
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
   });
 });
 

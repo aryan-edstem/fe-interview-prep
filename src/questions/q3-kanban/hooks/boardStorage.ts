@@ -24,8 +24,11 @@ function parseCard(id: string, value: unknown): Card | null {
 export function parseBoard(value: unknown): BoardState | null {
   if (!isRecord(value) || !isRecord(value.cards) || !isRecord(value.columns)) return null;
 
-  const cards: Record<string, Card> = {};
+  // Null prototype + `Object.hasOwn`: a saved id like "__proto__" or "toString" can neither
+  // rewrite the object's prototype nor pass the lookup by matching an inherited member.
+  const cards: Record<string, Card> = Object.create(null);
   for (const [id, raw] of Object.entries(value.cards)) {
+    if (id in Object.prototype) return null;
     const card = parseCard(id, raw);
     if (!card) return null;
     cards[id] = card;
@@ -37,14 +40,15 @@ export function parseBoard(value: unknown): BoardState | null {
     const ids: unknown = value.columns[column];
     if (!Array.isArray(ids)) return null;
     for (const id of ids) {
-      if (typeof id !== 'string' || !cards[id] || seen.has(id)) return null;
+      if (typeof id !== 'string' || !Object.hasOwn(cards, id) || seen.has(id)) return null;
       seen.add(id);
       columns[column].push(id);
     }
   }
   if (seen.size !== Object.keys(cards).length) return null;
 
-  return { cards, columns };
+  // Hand the reducer an ordinary object again (it spreads `cards` on every change).
+  return { cards: { ...cards }, columns };
 }
 
 /** Reads the saved board; falls back to an empty board when missing, corrupt or unavailable. */
