@@ -11,6 +11,9 @@ const stepButton =
   'flex size-7 items-center justify-center rounded-md border border-slate-300 text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40';
 
 export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemProps) {
+  const atMax = line.quantity >= line.stock;
+  const maxHintId = `cart-line-${line.id}-max`;
+
   return (
     <li className="flex gap-3 py-3">
       <img
@@ -43,6 +46,8 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
             type="button"
             className={stepButton}
             aria-label={`Increase quantity of ${line.title}`}
+            aria-describedby={atMax ? maxHintId : undefined}
+            disabled={atMax}
             onClick={() => onQuantityChange(line.id, line.quantity + 1)}
           >
             +
@@ -56,6 +61,11 @@ export function CartLineItem({ line, onQuantityChange, onRemove }: CartLineItemP
             Remove
           </button>
         </div>
+        {atMax && (
+          <p id={maxHintId} className="mt-1 text-xs text-amber-700">
+            Max {line.stock} in stock
+          </p>
+        )}
       </div>
       <p className="text-sm font-semibold tabular-nums">
         {formatCents(line.priceCents * line.quantity)}

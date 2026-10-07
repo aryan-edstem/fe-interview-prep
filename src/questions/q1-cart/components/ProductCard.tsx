@@ -8,6 +8,13 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product, quantityInCart, onAdd }: ProductCardProps) {
+  const outOfStock = product.stock < 1;
+  const atMax = !outOfStock && quantityInCart >= product.stock;
+  let label = 'Add to cart';
+  if (outOfStock) label = 'Out of stock';
+  else if (atMax) label = `All ${product.stock} in cart`;
+  else if (quantityInCart > 0) label = `Add another (${quantityInCart} in cart)`;
+
   return (
     <article className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-3">
       <img
@@ -27,10 +34,11 @@ export function ProductCard({ product, quantityInCart, onAdd }: ProductCardProps
         <button
           type="button"
           onClick={() => onAdd(product)}
-          aria-label={`Add ${product.title} to cart`}
+          disabled={outOfStock || atMax}
+          aria-label={`${label}: ${product.title}`}
           className="w-full rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-600"
         >
-          {quantityInCart > 0 ? `Add another (${quantityInCart} in cart)` : 'Add to cart'}
+          {label}
         </button>
       </div>
     </article>

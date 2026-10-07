@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Cart } from './components/Cart';
 import { ProductList } from './components/ProductList';
 import { useCart } from './hooks/useCart';
@@ -6,6 +7,12 @@ import { useProducts } from './hooks/useProducts';
 export default function CartPage() {
   const { state, retry } = useProducts();
   const cart = useCart();
+  const { reconcile } = cart;
+
+  // Sync stored cart lines with the freshly fetched stock and prices.
+  useEffect(() => {
+    if (state.kind === 'success') reconcile(state.products);
+  }, [state, reconcile]);
 
   return (
     <div>
