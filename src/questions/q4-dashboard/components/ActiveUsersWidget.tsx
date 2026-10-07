@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { formatCount, formatTime, toIsoString } from '../format';
+import { useElementWidth } from '../hooks/useElementWidth';
 import type { ActiveUsersPoint, Slice } from '../types';
 import { WidgetCard } from './WidgetCard';
 
@@ -8,10 +9,9 @@ interface ActiveUsersWidgetProps {
   className?: string;
 }
 
-const WIDTH = 600;
+const DEFAULT_WIDTH = 600;
 const HEIGHT = 180;
 const PAD = { top: 12, right: 16, bottom: 24, left: 40 };
-const INNER_W = WIDTH - PAD.left - PAD.right;
 const INNER_H = HEIGHT - PAD.top - PAD.bottom;
 
 /** Rounds up to a tidy axis maximum (a multiple of 50) with a little headroom. */
@@ -19,15 +19,16 @@ function axisMax(max: number) {
   return Math.max(50, Math.ceil((max * 1.1) / 50) * 50);
 }
 
-function ActiveUsersChart({ points }: { points: ActiveUsersPoint[] }) {
+function ActiveUsersChart({ points, width }: { points: ActiveUsersPoint[]; width: number }) {
   const first = points[0];
   const last = points.at(-1);
   if (!first || !last) return <p className="text-sm text-slate-500">No samples yet.</p>;
 
   const peak = Math.max(...points.map((p) => p.count));
   const yMax = axisMax(peak);
+  const innerW = width - PAD.left - PAD.right;
   const x = (i: number) =>
-    PAD.left + (points.length === 1 ? INNER_W / 2 : (i / (points.length - 1)) * INNER_W);
+    PAD.left + (points.length === 1 ? innerW / 2 : (i / (points.length - 1)) * innerW);
   const y = (count: number) => PAD.top + INNER_H - (count / yMax) * INNER_H;
   const line = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${x(i)},${y(p.count)}`).join(' ');
   const area = `${line} L${x(points.length - 1)},${y(0)} L${x(0)},${y(0)} Z`;
@@ -35,8 +36,10 @@ function ActiveUsersChart({ points }: { points: ActiveUsersPoint[] }) {
 
   return (
     <svg
-      viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-      className="h-auto w-full"
+      viewBox={`0 0 ${width} ${HEIGHT}`}
+      width={width}
+      height={HEIGHT}
+      className="block"
       role="img"
       aria-label={`Active users over the last ${points.length} samples: from ${formatCount(first.count)} to ${formatCount(last.count)}, peaking at ${formatCount(peak)}.`}
     >
@@ -44,7 +47,7 @@ function ActiveUsersChart({ points }: { points: ActiveUsersPoint[] }) {
         <g key={tick}>
           <line
             x1={PAD.left}
-            x2={WIDTH - PAD.right}
+            x2={width - PAD.right}
             y1={y(tick)}
             y2={y(tick)}
             className="stroke-slate-200"
@@ -105,6 +108,7 @@ export const ActiveUsersWidget = memo(function ActiveUsersWidget({
 }: ActiveUsersWidgetProps) {
   const points = activeUsers.value;
   const latest = points.at(-1);
+  const [chartRef, chartWidth] = useElementWidth<HTMLDivElement>(DEFAULT_WIDTH);
   return (
     <WidgetCard title="Active users" updatedAt={activeUsers.updatedAt} className={className}>
       {latest && (
@@ -116,7 +120,9 @@ export const ActiveUsersWidget = memo(function ActiveUsersWidget({
           </span>
         </p>
       )}
-      <ActiveUsersChart points={points} />
+      <div ref={chartRef}>
+        <ActiveUsersChart points={points} width={chartWidth} />
+      </div>
     </WidgetCard>
   );
 });
