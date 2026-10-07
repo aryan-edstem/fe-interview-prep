@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useFeed } from '../hooks/useFeed';
 import { useNearBottom } from '../hooks/useNearBottom';
-import { PostCard } from './PostCard';
+import { PostCard, PostCardSkeleton } from './PostCard';
 
 export function FeedList() {
   const { posts, status, loadMore, retry } = useFeed();
@@ -14,37 +14,70 @@ export function FeedList() {
   }, [isEmpty, loadMore]);
 
   return (
-    <section className="mx-auto max-w-2xl">
-      <h1 className="mb-4 text-2xl font-bold">Infinite feed</h1>
-      <ul className="grid gap-3">
+    <div className="page max-w-3xl">
+      <header className="page-header">
+        <div>
+          <p className="page-eyebrow">Question 2</p>
+          <h1 className="page-title">Infinite feed</h1>
+          <p className="page-description">
+            Posts load ten at a time as you near the bottom. Open one and come back to pick up where
+            you left off.
+          </p>
+        </div>
+        {posts.length > 0 && (
+          <p className="badge badge-brand">{posts.length.toLocaleString()} loaded</p>
+        )}
+      </header>
+
+      <ul className="grid gap-4">
         {posts.map((post) => (
           <li key={post.id}>
             <PostCard post={post} />
           </li>
         ))}
       </ul>
-      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
-      <div role="status" aria-live="polite" className="py-6 text-center text-sm text-slate-600">
-        {status.kind === 'loading' && (isEmpty ? 'Loading posts...' : 'Loading more posts...')}
-        {status.kind === 'end' && (isEmpty ? 'No posts yet.' : "You've reached the end")}
-      </div>
-      {status.kind === 'error' && (
-        <div
-          role="alert"
-          className="flex flex-wrap items-center justify-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
-        >
-          <span>
-            {isEmpty ? 'Could not load posts.' : 'Could not load more posts.'} {status.message}
-          </span>
-          <button
-            type="button"
-            onClick={retry}
-            className="rounded-md bg-red-700 px-3 py-1.5 font-medium text-white hover:bg-red-800"
-          >
-            Retry
-          </button>
+
+      {status.kind === 'loading' && (
+        <div className="mt-4 grid gap-4">
+          {Array.from({ length: isEmpty ? 3 : 2 }, (_, i) => (
+            <PostCardSkeleton key={i} />
+          ))}
         </div>
       )}
-    </section>
+
+      <div ref={sentinelRef} aria-hidden="true" className="h-px" />
+
+      <div className="mt-6">
+        <div role="status" aria-live="polite">
+          {/* Always mounted so the live region only swaps its text. */}
+          <span className="sr-only">
+            {status.kind === 'loading' && (isEmpty ? 'Loading posts...' : 'Loading more posts...')}
+          </span>
+          {status.kind === 'end' &&
+            (isEmpty ? (
+              <p className="empty-state">No posts yet.</p>
+            ) : (
+              <p className="flex items-center gap-4 py-4 text-sm font-medium text-slate-500">
+                <span aria-hidden="true" className="h-px flex-1 bg-slate-200" />
+                You&apos;ve reached the end
+                <span aria-hidden="true" className="h-px flex-1 bg-slate-200" />
+              </p>
+            ))}
+        </div>
+        {status.kind === 'error' && (
+          <div role="alert" className="alert alert-danger">
+            <p>
+              <span className="font-medium">
+                {isEmpty ? 'Could not load posts.' : 'Could not load more posts.'}
+              </span>{' '}
+              {status.message}
+            </p>
+            <button type="button" onClick={retry} className="btn btn-secondary btn-sm">
+              Retry
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

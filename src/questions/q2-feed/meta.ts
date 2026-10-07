@@ -6,4 +6,5 @@ export const meta: QuestionMeta = {
   title: 'Infinite feed',
   summary:
     'Posts that load as you scroll, without duplicate requests, and keep your place on back.',
+  tags: ['IntersectionObserver', 'useSyncExternalStore', 'Scroll restoration'],
 };

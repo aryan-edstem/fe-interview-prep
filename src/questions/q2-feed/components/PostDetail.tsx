@@ -19,9 +19,29 @@ function BackToFeed() {
   }
 
   return (
-    <Link to=".." onClick={handleClick} className="mb-4 inline-block text-blue-700 underline">
+    <Link to=".." onClick={handleClick} className="btn btn-ghost btn-sm mb-4 -ml-2.5">
+      <span aria-hidden="true">&larr;</span>
       Back to feed
     </Link>
+  );
+}
+
+function PostSkeleton() {
+  return (
+    <div role="status" className="card card-body sm:p-8">
+      <span className="sr-only">Loading post...</span>
+      <div aria-hidden="true">
+        <div className="skeleton mb-3 h-3 w-20" />
+        <div className="skeleton mb-6 h-8 w-3/4" />
+        <div className="skeleton mb-2 h-4 w-full" />
+        <div className="skeleton mb-2 h-4 w-full" />
+        <div className="skeleton mb-8 h-4 w-2/3" />
+        <div className="flex gap-1.5">
+          <div className="skeleton h-5 w-16 rounded-full" />
+          <div className="skeleton h-5 w-16 rounded-full" />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -30,43 +50,50 @@ export function PostDetail() {
   const { state, retry } = usePost(Number(postId));
 
   return (
-    <section className="mx-auto max-w-2xl">
+    <div className="page max-w-3xl">
       <BackToFeed />
-      {state.kind === 'loading' && (
-        <p role="status" className="text-slate-600">
-          Loading post...
-        </p>
+      {state.kind === 'loading' && <PostSkeleton />}
+      {state.kind === 'not-found' && (
+        <div className="empty-state">
+          <h1 className="text-lg font-semibold">Post not found</h1>
+          <p>It may have been removed, or the link is wrong.</p>
+        </div>
       )}
-      {state.kind === 'not-found' && <h1 className="text-2xl font-bold">Post not found</h1>}
       {state.kind === 'error' && (
-        <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-800">
-          <p className="mb-2">Could not load this post. {state.message}</p>
-          <button
-            type="button"
-            onClick={retry}
-            className="rounded-md bg-red-700 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-800"
-          >
+        <div role="alert" className="alert alert-danger">
+          <p>
+            <span className="font-medium">Could not load this post.</span> {state.message}
+          </p>
+          <button type="button" onClick={retry} className="btn btn-secondary btn-sm">
             Retry
           </button>
         </div>
       )}
       {state.kind === 'ready' && (
-        <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-          <h1 className="mb-3 text-2xl font-bold">{state.post.title}</h1>
-          <p className="mb-4 leading-relaxed text-slate-700">{state.post.body}</p>
-          <ul className="mb-4 flex flex-wrap gap-2 text-xs" aria-label="Tags">
-            {state.post.tags.map((tag) => (
-              <li key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
-                #{tag}
+        <article className="card card-body sm:p-8">
+          <p className="page-eyebrow">Post #{state.post.id}</p>
+          <h1 className="mb-4 text-2xl leading-tight font-bold sm:text-3xl">{state.post.title}</h1>
+          <p className="text-base leading-relaxed text-slate-700 sm:text-lg">{state.post.body}</p>
+          <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5">
+            <ul aria-label="Tags" className="flex flex-wrap gap-1.5">
+              {state.post.tags.map((tag) => (
+                <li key={tag} className="badge badge-neutral">
+                  #{tag}
+                </li>
+              ))}
+            </ul>
+            <ul aria-label="Reactions" className="ml-auto flex flex-wrap gap-1.5">
+              <li className="badge badge-success">
+                {state.post.reactions.likes.toLocaleString()} likes
               </li>
-            ))}
-          </ul>
-          <p className="text-sm text-slate-500">
-            {state.post.reactions.likes} likes · {state.post.reactions.dislikes} dislikes ·{' '}
-            {state.post.views} views
-          </p>
+              <li className="badge badge-danger">
+                {state.post.reactions.dislikes.toLocaleString()} dislikes
+              </li>
+              <li className="badge badge-neutral">{state.post.views.toLocaleString()} views</li>
+            </ul>
+          </div>
         </article>
       )}
-    </section>
+    </div>
   );
 }
