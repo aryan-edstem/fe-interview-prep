@@ -1,4 +1,4 @@
-import { HttpError } from '../api/commentsApi';
+import { HttpError, NetworkError } from '../api/commentsApi';
 import type { Comment, CommentDraft } from '../types';
 import { createOutbox, OUTBOX_STORAGE_KEY } from './createOutbox';
 
@@ -94,4 +94,49 @@ test('does not send while offline', () => {
   outbox.add('You', 'later');
   outbox.flush();
   expect(send).not.toHaveBeenCalled();
+});
+
+test('keeps a comment queued after a network error and resends it with the same key', async () => {
+  let online = true;
+  const send = vi
+    .fn<(draft: CommentDraft) => Promise<Comment>>()
+    .mockImplementationOnce(() => {
+      online = false; // The connection drops mid-request...
+      return Promise.reject(new NetworkError('Network unavailable'));
+    })
+    .mockImplementation((draft) => Promise.resolve(toComment(draft)));
+  const outbox = createOutbox({ send, isOnline: () => online, createId });
+  outbox.start();
+  outbox.add('You', 'one');
+
+  await vi.waitFor(() => expect(send).toHaveBeenCalledTimes(1));
+  await vi.waitFor(() => expect(outbox.getSnapshot()[0]?.status).toBe('queued'));
+
+  online = true; // ...and comes back.
+  outbox.flush();
+  await vi.waitFor(() => expect(outbox.getSnapshot()[0]?.status).toBe('sent'));
+  expect(send.mock.calls.map(([draft]) => draft.clientId)).toEqual(['id-1', 'id-1']);
+});
+
+test('re-queues on a network error even if the browser already reports online again', async () => {
+  vi.useFakeTimers();
+  try {
+    const send = vi
+      .fn<(draft: CommentDraft) => Promise<Comment>>()
+      .mockRejectedValueOnce(new NetworkError('Network unavailable'))
+      .mockImplementation((draft) => Promise.resolve(toComment(draft)));
+    const outbox = createOutbox({ send, isOnline: () => true, createId, networkRetryMs: 1000 });
+    outbox.start();
+    outbox.add('You', 'one');
+
+    await vi.advanceTimersByTimeAsync(0);
+    expect(outbox.getSnapshot()[0]?.status).toBe('queued');
+    expect(send).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(outbox.getSnapshot()[0]?.status).toBe('sent');
+    expect(send).toHaveBeenCalledTimes(2);
+  } finally {
+    vi.useRealTimers();
+  }
 });

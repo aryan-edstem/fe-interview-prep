@@ -8,6 +8,8 @@ export interface OutboxOptions {
   isOnline: () => boolean;
   storageKey?: string;
   createId?: () => string;
+  /** Pause before resending after a network error while the browser still reports online. */
+  networkRetryMs?: number;
 }
 
 export interface Outbox {
@@ -77,6 +79,7 @@ export function createOutbox({
   isOnline,
   storageKey = OUTBOX_STORAGE_KEY,
   createId = () => crypto.randomUUID(),
+  networkRetryMs = 3000,
 }: OutboxOptions): Outbox {
   let items: readonly OutboxItem[] = load(storageKey);
   const listeners = new Set<() => void>();
@@ -85,6 +88,7 @@ export function createOutbox({
   let session = 0;
   // The single in-flight lock: at most one request at a time, however many triggers fire.
   let inFlight: AbortController | null = null;
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
   function setItems(next: readonly OutboxItem[]) {
     items = next;
@@ -107,25 +111,36 @@ export function createOutbox({
     const draft = toDraft(item);
     replace(item.clientId, (current) => ({ ...current, ...draft, status: 'sending' }));
     let next: OutboxItem;
+    let networkError = false;
     try {
       const comment = await send(draft, controller.signal);
       next = { ...draft, createdAt: item.createdAt, status: 'sent', comment };
     } catch (err) {
-      next =
-        err instanceof NetworkError && !isOnline()
-          ? { ...draft, createdAt: item.createdAt, status: 'queued' }
-          : {
-              ...draft,
-              createdAt: item.createdAt,
-              status: 'failed',
-              error: err instanceof Error ? err.message : 'Could not send',
-            };
+      // No response at all: the connection dropped (the `online`/`offline` events may fire before
+      // or after the rejection), so keep it queued rather than asking the user to retry. Replaying
+      // later is safe because of the idempotency key.
+      networkError = err instanceof NetworkError;
+      next = networkError
+        ? { ...draft, createdAt: item.createdAt, status: 'queued' }
+        : {
+            ...draft,
+            createdAt: item.createdAt,
+            status: 'failed',
+            error: err instanceof Error ? err.message : 'Could not send',
+          };
     }
     if (mySession !== session) return;
     inFlight = null;
     // `acknowledge` may have confirmed it from the server list while the request was in flight.
     replace(item.clientId, (current) => (current.status === 'sent' ? current : next));
-    flush();
+    if (!networkError) {
+      flush();
+    } else if (isOnline()) {
+      // Still "online" yet unreachable: back off instead of retrying in a tight loop. When offline,
+      // the `online` event triggers the next flush.
+      clearTimeout(retryTimer);
+      retryTimer = setTimeout(flush, networkRetryMs);
+    }
   }
 
   function flush() {
@@ -204,6 +219,7 @@ export function createOutbox({
     stop() {
       session += 1;
       active = false;
+      clearTimeout(retryTimer);
       inFlight?.abort();
       inFlight = null;
     },
