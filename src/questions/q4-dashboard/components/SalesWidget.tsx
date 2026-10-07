@@ -1,18 +1,20 @@
+import { memo } from 'react';
 import { formatCount, formatCurrency } from '../format';
-import type { SalesSummary } from '../types';
+import type { SalesSummary, Slice } from '../types';
 import { WidgetCard } from './WidgetCard';
 
 interface SalesWidgetProps {
-  sales: SalesSummary;
+  sales: Slice<SalesSummary>;
 }
 
-export function SalesWidget({ sales }: SalesWidgetProps) {
+/** Memoized: re-renders only when the sales slice changes reference (see `mergeDashboard`). */
+export const SalesWidget = memo(function SalesWidget({ sales }: SalesWidgetProps) {
   return (
-    <WidgetCard title="Sales today">
+    <WidgetCard title="Sales today" updatedAt={sales.updatedAt}>
       <p className="text-3xl font-semibold text-slate-900 tabular-nums">
-        {formatCurrency(sales.totalToday)}
+        {formatCurrency(sales.value.totalToday)}
       </p>
-      <p className="mt-1 text-sm text-slate-600">{formatCount(sales.ordersToday)} orders</p>
+      <p className="mt-1 text-sm text-slate-600">{formatCount(sales.value.ordersToday)} orders</p>
     </WidgetCard>
   );
-}
+});

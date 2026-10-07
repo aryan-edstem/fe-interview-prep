@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import { formatCurrency, formatTime, toIsoString } from '../format';
-import type { Order, OrderStatus } from '../types';
+import type { Order, OrderStatus, Slice } from '../types';
 import { WidgetCard } from './WidgetCard';
 
 interface RecentOrdersWidgetProps {
-  orders: Order[];
+  orders: Slice<Order[]>;
   className?: string;
 }
 
@@ -19,9 +20,13 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   refunded: 'Refunded',
 };
 
-export function RecentOrdersWidget({ orders, className }: RecentOrdersWidgetProps) {
+/** Memoized: re-renders only when the orders slice changes reference. */
+export const RecentOrdersWidget = memo(function RecentOrdersWidget({
+  orders: { value: orders, updatedAt },
+  className,
+}: RecentOrdersWidgetProps) {
   return (
-    <WidgetCard title="Recent orders" className={className}>
+    <WidgetCard title="Recent orders" updatedAt={updatedAt} className={className}>
       {orders.length === 0 ? (
         <p className="text-sm text-slate-500">No orders yet today.</p>
       ) : (
@@ -51,4 +56,4 @@ export function RecentOrdersWidget({ orders, className }: RecentOrdersWidgetProp
       )}
     </WidgetCard>
   );
-}
+});

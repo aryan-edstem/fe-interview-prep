@@ -43,7 +43,7 @@ export default function DashboardPage() {
       {state.kind === 'ready' && (
         <div className="grid gap-4 lg:grid-cols-3">
           <SalesWidget sales={state.data.sales} />
-          <ActiveUsersWidget points={state.data.activeUsers} className="lg:col-span-2" />
+          <ActiveUsersWidget activeUsers={state.data.activeUsers} className="lg:col-span-2" />
           <RecentOrdersWidget orders={state.data.recentOrders} className="lg:col-span-3" />
         </div>
       )}

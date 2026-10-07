@@ -30,3 +30,18 @@ export interface DashboardResponse {
   /** Newest first. */
   recentOrders: Order[];
 }
+
+/** One widget's data plus when it last actually changed. */
+export interface Slice<T> {
+  value: T;
+  /** `generatedAt` of the snapshot in which `value` last changed. */
+  updatedAt: number;
+}
+
+/** Client-side view of the dashboard: one independently-stable slice per widget. */
+export interface DashboardData {
+  generatedAt: number;
+  sales: Slice<SalesSummary>;
+  activeUsers: Slice<ActiveUsersPoint[]>;
+  recentOrders: Slice<Order[]>;
+}

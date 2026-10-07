@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import { formatCount, formatTime, toIsoString } from '../format';
-import type { ActiveUsersPoint } from '../types';
+import type { ActiveUsersPoint, Slice } from '../types';
 import { WidgetCard } from './WidgetCard';
 
 interface ActiveUsersWidgetProps {
-  points: ActiveUsersPoint[];
+  activeUsers: Slice<ActiveUsersPoint[]>;
   className?: string;
 }
 
@@ -97,10 +98,15 @@ function ActiveUsersChart({ points }: { points: ActiveUsersPoint[] }) {
   );
 }
 
-export function ActiveUsersWidget({ points, className }: ActiveUsersWidgetProps) {
+/** Memoized: re-renders only when the active-users slice changes reference. */
+export const ActiveUsersWidget = memo(function ActiveUsersWidget({
+  activeUsers,
+  className,
+}: ActiveUsersWidgetProps) {
+  const points = activeUsers.value;
   const latest = points.at(-1);
   return (
-    <WidgetCard title="Active users" className={className}>
+    <WidgetCard title="Active users" updatedAt={activeUsers.updatedAt} className={className}>
       {latest && (
         <p className="mb-2 text-3xl font-semibold text-slate-900 tabular-nums">
           {formatCount(latest.count)}{' '}
@@ -113,4 +119,4 @@ export function ActiveUsersWidget({ points, className }: ActiveUsersWidgetProps)
       <ActiveUsersChart points={points} />
     </WidgetCard>
   );
-}
+});
