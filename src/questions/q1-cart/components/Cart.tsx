@@ -21,17 +21,26 @@ export function Cart({ lines, onQuantityChange, onRemove }: CartProps) {
       <h2 id="cart-heading" className="text-lg font-semibold">
         Cart
       </h2>
-      <ul className="divide-y divide-slate-100">
-        {lines.map((line) => (
-          <CartLineItem
-            key={line.id}
-            line={line}
-            onQuantityChange={onQuantityChange}
-            onRemove={onRemove}
-          />
-        ))}
-      </ul>
-      <CartSummary totals={totals} />
+      {lines.length === 0 ? (
+        <div className="py-8 text-center">
+          <p className="font-medium">Your cart is empty</p>
+          <p className="mt-1 text-sm text-slate-500">Add a product to see your totals here.</p>
+        </div>
+      ) : (
+        <>
+          <ul className="divide-y divide-slate-100">
+            {lines.map((line) => (
+              <CartLineItem
+                key={line.id}
+                line={line}
+                onQuantityChange={onQuantityChange}
+                onRemove={onRemove}
+              />
+            ))}
+          </ul>
+          <CartSummary totals={totals} />
+        </>
+      )}
     </section>
   );
 }
