@@ -8,5 +8,5 @@ export function useFeed() {
   const store = useContext(FeedStoreContext);
   if (!store) throw new Error('useFeed must be used inside FeedStoreContext');
   const state = useSyncExternalStore(store.subscribe, store.getSnapshot);
-  return { ...state, loadMore: store.loadMore };
+  return { ...state, loadMore: store.loadMore, retry: store.retry };
 }

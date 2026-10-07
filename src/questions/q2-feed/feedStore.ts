@@ -17,6 +17,8 @@ export interface FeedStore {
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => FeedState;
   loadMore: () => void;
+  /** Re-requests the page that failed; earlier pages are kept. */
+  retry: () => void;
   /** Aborts the in-flight page request, if any. */
   abort: () => void;
 }
@@ -83,6 +85,9 @@ export function createFeedStore(fetchPage: FetchPage = fetchPostsPage): FeedStor
     getSnapshot: () => state,
     loadMore() {
       if (state.status.kind === 'idle') void requestNextPage();
+    },
+    retry() {
+      if (state.status.kind === 'error') void requestNextPage();
     },
     abort() {
       if (!controller) return;
