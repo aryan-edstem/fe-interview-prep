@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer } from 'react';
+import { loadCartLines, saveCartLines } from '../storage';
 import type { CartLine, Product } from '../types';
 
 export interface CartState {
@@ -80,7 +81,12 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 export function useCart() {
-  const [state, dispatch] = useReducer(cartReducer, emptyCart);
+  // Lazy init: read storage once on mount so a refresh restores the cart.
+  const [state, dispatch] = useReducer(cartReducer, undefined, () => ({ lines: loadCartLines() }));
+
+  useEffect(() => {
+    saveCartLines(state.lines);
+  }, [state.lines]);
 
   const add = useCallback((product: Product) => dispatch({ type: 'add', product }), []);
   const setQuantity = useCallback(
