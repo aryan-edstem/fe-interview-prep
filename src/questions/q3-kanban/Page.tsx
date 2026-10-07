@@ -4,7 +4,7 @@ import { useBoard } from './hooks/useBoard';
 import type { Card } from './types';
 
 export default function KanbanPage() {
-  const { board } = useBoard();
+  const { board, addCard } = useBoard();
 
   const cardsIn = (ids: readonly string[]): Card[] =>
     ids.flatMap((id) => {
@@ -20,7 +20,12 @@ export default function KanbanPage() {
       </p>
       <div className="grid gap-4 md:grid-cols-3">
         {COLUMNS.map((column) => (
-          <Column key={column.id} column={column} cards={cardsIn(board.columns[column.id])} />
+          <Column
+            key={column.id}
+            column={column}
+            cards={cardsIn(board.columns[column.id])}
+            onAddCard={(draft) => addCard(column.id, draft)}
+          />
         ))}
       </div>
     </section>

@@ -1,15 +1,26 @@
-import { useId } from 'react';
-import type { Card, Column as ColumnType } from '../types';
+import { useId, useRef, useState } from 'react';
+import type { Card, CardDraft, Column as ColumnType } from '../types';
+import { CardForm } from './CardForm';
 import { CardItem } from './CardItem';
 
 export interface ColumnProps {
   column: ColumnType;
   cards: Card[];
+  onAddCard: (draft: CardDraft) => void;
 }
 
-export function Column({ column, cards }: ColumnProps) {
+export function Column({ column, cards, onAddCard }: ColumnProps) {
   const headingId = useId();
   const count = cards.length;
+  const [isAdding, setIsAdding] = useState(false);
+  // Bumped after each add so the form remounts empty and refocuses its title for the next card.
+  const [formKey, setFormKey] = useState(0);
+  const focusAddButton = useRef(false);
+
+  function closeForm() {
+    focusAddButton.current = true;
+    setIsAdding(false);
+  }
 
   return (
     <section
@@ -32,6 +43,34 @@ export function Column({ column, cards }: ColumnProps) {
           ))}
         </ul>
       )}
+      <div className="mt-3">
+        {isAdding ? (
+          <CardForm
+            key={formKey}
+            label={`Add a card to ${column.title}`}
+            submitLabel="Add card"
+            onSubmit={(draft) => {
+              onAddCard(draft);
+              setFormKey((key) => key + 1);
+            }}
+            onCancel={closeForm}
+          />
+        ) : (
+          <button
+            type="button"
+            ref={(button) => {
+              if (button && focusAddButton.current) {
+                focusAddButton.current = false;
+                button.focus();
+              }
+            }}
+            onClick={() => setIsAdding(true)}
+            className="w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-200"
+          >
+            + Add card<span className="sr-only"> to {column.title}</span>
+          </button>
+        )}
+      </div>
     </section>
   );
 }
