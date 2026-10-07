@@ -1,15 +1,15 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import type { Card, CardDraft, Column as ColumnType } from '../types';
 import { CardForm } from './CardForm';
-import { CardItem } from './CardItem';
 
 export interface ColumnProps {
   column: ColumnType;
   cards: Card[];
   onAddCard: (draft: CardDraft) => void;
+  renderCard: (card: Card, index: number) => ReactNode;
 }
 
-export function Column({ column, cards, onAddCard }: ColumnProps) {
+export function Column({ column, cards, onAddCard, renderCard }: ColumnProps) {
   const headingId = useId();
   const count = cards.length;
   const [isAdding, setIsAdding] = useState(false);
@@ -37,11 +37,7 @@ export function Column({ column, cards, onAddCard }: ColumnProps) {
       {count === 0 ? (
         <p className="py-4 text-center text-sm text-slate-500">No cards yet</p>
       ) : (
-        <ul className="space-y-2">
-          {cards.map((card) => (
-            <CardItem key={card.id} card={card} />
-          ))}
-        </ul>
+        <ul className="space-y-2">{cards.map((card, index) => renderCard(card, index))}</ul>
       )}
       <div className="mt-3">
         {isAdding ? (
