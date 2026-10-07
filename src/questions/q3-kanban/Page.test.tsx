@@ -16,7 +16,8 @@ function expectCount(name: string, count: number) {
 
 async function renderBoard() {
   const result = renderRoute('/kanban');
-  await screen.findByRole('heading', { level: 1, name: 'Kanban board' });
+  // The page is lazy-loaded; the first import in a cold test worker can exceed the 1s default.
+  await screen.findByRole('heading', { level: 1, name: 'Kanban board' }, { timeout: 5000 });
   return result;
 }
 
