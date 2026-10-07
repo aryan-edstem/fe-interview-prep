@@ -7,6 +7,8 @@ export interface QuestionMeta {
   slug: string;
   title: string;
   summary: string;
+  /** Short concept labels shown on the home card, e.g. `['useReducer', 'localStorage']`. */
+  tags?: string[];
 }
 
 export interface Question extends QuestionMeta {
