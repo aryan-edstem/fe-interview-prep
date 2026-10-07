@@ -56,7 +56,9 @@ function createDashboardFeed() {
   for (let i = 0; i < 4; i++) placeOrder(start - (4 - i) * 60_000);
 
   return function next(): DashboardResponse {
-    const now = Date.now();
+    // Strictly increasing, even for two calls in the same millisecond (e.g. Strict Mode's
+    // double-mounted effect): samples are keyed by time and snapshots ordered by it.
+    const now = Math.max(Date.now(), (series.at(-1)?.at ?? 0) + 1);
     const last = series.at(-1)?.count ?? 200;
     series = [...series, { at: now, count: Math.max(40, last + randomInt(-30, 30)) }].slice(
       -SERIES_LENGTH,
