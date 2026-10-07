@@ -188,6 +188,8 @@ describe('infinite feed', () => {
     expect(requestedSkips).toEqual([0, 10]);
 
     await user.click(within(alert).getByRole('button', { name: 'Retry' }));
+    // The button goes away with the alert; focus must not fall back to <body>.
+    expect(screen.getByRole('group', { name: 'Feed status' })).toHaveFocus();
     await screen.findByRole('link', { name: 'Post 20' });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(requestedSkips).toEqual([0, 10, 10]);

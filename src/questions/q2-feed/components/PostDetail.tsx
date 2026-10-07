@@ -1,4 +1,4 @@
-import type { MouseEvent } from 'react';
+import { useRef, type MouseEvent } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { usePost } from '../hooks/usePost';
 
@@ -77,9 +77,16 @@ export function PostDetail() {
 
 function PostContent({ id }: { id: number }) {
   const { state, retry } = usePost(id);
+  const regionRef = useRef<HTMLDivElement>(null);
+
+  // Retry swaps the alert for a skeleton; move focus to the region so it isn't lost to <body>.
+  function handleRetry() {
+    regionRef.current?.focus();
+    retry();
+  }
 
   return (
-    <>
+    <div ref={regionRef} tabIndex={-1} className="focus-visible:outline-none">
       {state.kind === 'loading' && <PostSkeleton />}
       {state.kind === 'not-found' && <PostNotFound />}
       {state.kind === 'error' && (
@@ -87,7 +94,7 @@ function PostContent({ id }: { id: number }) {
           <p>
             <span className="font-medium">Could not load this post.</span> {state.message}
           </p>
-          <button type="button" onClick={retry} className="btn btn-secondary btn-sm">
+          <button type="button" onClick={handleRetry} className="btn btn-secondary btn-sm">
             Retry
           </button>
         </div>
@@ -117,6 +124,6 @@ function PostContent({ id }: { id: number }) {
           </div>
         </article>
       )}
-    </>
+    </div>
   );
 }

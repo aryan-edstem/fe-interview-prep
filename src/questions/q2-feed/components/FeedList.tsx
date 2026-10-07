@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFeed } from '../hooks/useFeed';
 import { useNearBottom } from '../hooks/useNearBottom';
 import { PostCard, PostCardSkeleton } from './PostCard';
@@ -7,6 +7,14 @@ export function FeedList() {
   const { posts, status, loadMore, retry } = useFeed();
   const isEmpty = posts.length === 0;
   const sentinelRef = useNearBottom<HTMLDivElement>(loadMore, { enabled: status.kind === 'idle' });
+  const footerRef = useRef<HTMLDivElement>(null);
+
+  // Retry unmounts the alert (and the focused button with it), so keep focus in the footer, where
+  // the loading status and any new error are announced.
+  function handleRetry() {
+    footerRef.current?.focus();
+    retry();
+  }
 
   // Only the very first visit starts from scratch; coming back from a post keeps what's loaded.
   useEffect(() => {
@@ -47,7 +55,13 @@ export function FeedList() {
 
       <div ref={sentinelRef} aria-hidden="true" className="h-px" />
 
-      <div className="mt-6">
+      <div
+        ref={footerRef}
+        tabIndex={-1}
+        role="group"
+        aria-label="Feed status"
+        className="mt-6 focus-visible:outline-none"
+      >
         <div role="status" aria-live="polite">
           {/* Always mounted so the live region only swaps its text. */}
           <span className="sr-only">
@@ -72,7 +86,7 @@ export function FeedList() {
               </span>{' '}
               {status.message}
             </p>
-            <button type="button" onClick={retry} className="btn btn-secondary btn-sm">
+            <button type="button" onClick={handleRetry} className="btn btn-secondary btn-sm">
               Retry
             </button>
           </div>
