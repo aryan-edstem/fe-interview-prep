@@ -74,8 +74,7 @@ export function Column({
       <h2 id={headingId} className="mb-3 flex items-center justify-between font-semibold">
         {column.title}{' '}
         <span className="rounded-full bg-white px-2 py-0.5 text-sm text-slate-700">
-          {count}
-          <span className="sr-only"> {count === 1 ? 'card' : 'cards'}</span>
+          {count} <span className="sr-only">{count === 1 ? 'card' : 'cards'}</span>
         </span>
       </h2>
       {count === 0 ? (
@@ -109,7 +108,7 @@ export function Column({
             onClick={() => setIsAdding(true)}
             className="w-full rounded-md px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-200"
           >
-            + Add card<span className="sr-only"> to {column.title}</span>
+            + Add card <span className="sr-only">to {column.title}</span>
           </button>
         )}
       </div>

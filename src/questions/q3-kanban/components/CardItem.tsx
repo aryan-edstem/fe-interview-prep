@@ -85,14 +85,14 @@ export function CardItem({
         )}
         <div className="mt-2 flex flex-wrap gap-1">
           <button type="button" data-focus="edit" onClick={onEdit} className={actionClass}>
-            Edit<span className="sr-only"> {card.title}</span>
+            Edit <span className="sr-only">{card.title}</span>
           </button>
           <button
             type="button"
             onClick={onDelete}
             className={`${actionClass} text-red-700 hover:bg-red-50`}
           >
-            Delete<span className="sr-only"> {card.title}</span>
+            Delete <span className="sr-only">{card.title}</span>
           </button>
           {moveMenu}
         </div>

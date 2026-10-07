@@ -37,7 +37,7 @@ export function MoveMenu({ cardTitle, isOpen, options, onToggle, onClose, onMove
         onClick={onToggle}
         className={buttonClass}
       >
-        Move<span className="sr-only"> {cardTitle}</span>
+        Move <span className="sr-only">{cardTitle}</span>
       </button>
       {isOpen && (
         <div
