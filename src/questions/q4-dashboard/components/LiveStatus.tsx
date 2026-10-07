@@ -3,16 +3,25 @@ import { formatTime, toIsoString } from '../format';
 interface LiveStatusProps {
   updatedAt: number;
   error: string | null;
+  /** True while polling is paused because the tab is hidden. */
+  paused: boolean;
 }
 
 /** Announces when the data was last refreshed and whether the latest refresh failed. */
-export function LiveStatus({ updatedAt, error }: LiveStatusProps) {
+export function LiveStatus({ updatedAt, error, paused }: LiveStatusProps) {
   return (
     <div role="status" className="flex flex-wrap items-center gap-2 text-sm">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-800">
-        <span aria-hidden="true" className="size-2 rounded-full bg-emerald-500" />
-        Live
-      </span>
+      {paused ? (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 font-medium text-slate-700">
+          <span aria-hidden="true" className="size-2 rounded-full bg-slate-400" />
+          Paused while this tab is hidden
+        </span>
+      ) : (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-800">
+          <span aria-hidden="true" className="size-2 rounded-full bg-emerald-500" />
+          Live
+        </span>
+      )}
       <span className="text-slate-600">
         Updated <time dateTime={toIsoString(updatedAt)}>{formatTime(updatedAt)}</time>
       </span>

@@ -12,6 +12,11 @@ export type LiveDataState<T> =
 export interface LiveDataOptions {
   /** Delay between one request settling and the next one starting. */
   intervalMs: number;
+  /**
+   * While `false`, nothing is in flight and nothing is scheduled. Turning it back on fetches
+   * immediately, then resumes the interval.
+   */
+  enabled: boolean;
 }
 
 function toMessage(error: unknown) {
@@ -21,16 +26,17 @@ function toMessage(error: unknown) {
 /**
  * Polls `fetcher` every `intervalMs`. The next request is scheduled only after the current one
  * settles (chained `setTimeout`, not `setInterval`), so at most one request is ever in flight and a
- * slow API can't make requests pile up. Unmounting aborts the in-flight request and clears the
- * timer. `fetcher` must be referentially stable (e.g. a module-level function).
+ * slow API can't make requests pile up. Disabling or unmounting aborts the in-flight request and
+ * clears the timer. `fetcher` must be referentially stable (e.g. a module-level function).
  */
 export function useLiveData<T>(
   fetcher: (signal: AbortSignal) => Promise<T>,
-  { intervalMs }: LiveDataOptions,
+  { intervalMs, enabled }: LiveDataOptions,
 ): LiveDataState<T> {
   const [state, setState] = useState<LiveDataState<T>>({ kind: 'loading' });
 
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
 
@@ -54,7 +60,7 @@ export function useLiveData<T>(
       controller.abort();
       clearTimeout(timer);
     };
-  }, [fetcher, intervalMs]);
+  }, [fetcher, intervalMs, enabled]);
 
   return state;
 }

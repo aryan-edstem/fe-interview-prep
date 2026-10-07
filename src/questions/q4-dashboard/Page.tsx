@@ -4,21 +4,24 @@ import { LiveStatus } from './components/LiveStatus';
 import { RecentOrdersWidget } from './components/RecentOrdersWidget';
 import { SalesWidget } from './components/SalesWidget';
 import { useLiveData } from './hooks/useLiveData';
+import { usePageVisible } from './hooks/usePageVisible';
 
 const POLL_INTERVAL_MS = 5_000;
 
 export default function DashboardPage() {
-  const state = useLiveData(fetchDashboard, { intervalMs: POLL_INTERVAL_MS });
+  const visible = usePageVisible();
+  const state = useLiveData(fetchDashboard, { intervalMs: POLL_INTERVAL_MS, enabled: visible });
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold text-slate-900">Live dashboard</h1>
         <p className="text-sm text-slate-600">
-          Sales, active users and the latest orders, refreshed every 5 seconds.
+          Sales, active users and the latest orders, refreshed every 5 seconds while this tab is
+          visible.
         </p>
         {state.kind === 'ready' && (
-          <LiveStatus updatedAt={state.data.generatedAt} error={state.error} />
+          <LiveStatus updatedAt={state.data.generatedAt} error={state.error} paused={!visible} />
         )}
       </header>
 
