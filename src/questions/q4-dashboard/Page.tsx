@@ -1,4 +1,5 @@
 import { fetchDashboard } from './api';
+import { mergeDashboard } from './dashboardData';
 import { ActiveUsersWidget } from './components/ActiveUsersWidget';
 import { LiveStatus } from './components/LiveStatus';
 import { RecentOrdersWidget } from './components/RecentOrdersWidget';
@@ -10,7 +11,11 @@ const POLL_INTERVAL_MS = 5_000;
 
 export default function DashboardPage() {
   const visible = usePageVisible();
-  const state = useLiveData(fetchDashboard, { intervalMs: POLL_INTERVAL_MS, enabled: visible });
+  const state = useLiveData(fetchDashboard, {
+    intervalMs: POLL_INTERVAL_MS,
+    enabled: visible,
+    merge: mergeDashboard,
+  });
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
