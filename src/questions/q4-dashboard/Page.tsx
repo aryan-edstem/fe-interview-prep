@@ -4,8 +4,10 @@ import { ActiveUsersWidget } from './components/ActiveUsersWidget';
 import { LiveStatus } from './components/LiveStatus';
 import { RecentOrdersWidget } from './components/RecentOrdersWidget';
 import { SalesWidget } from './components/SalesWidget';
+import { WidgetToggles } from './components/WidgetToggles';
 import { useLiveData } from './hooks/useLiveData';
 import { usePageVisible } from './hooks/usePageVisible';
+import { useWidgetPreferences } from './hooks/useWidgetPreferences';
 
 const POLL_INTERVAL_MS = 5_000;
 
@@ -16,6 +18,8 @@ export default function DashboardPage() {
     enabled: visible,
     merge: mergeDashboard,
   });
+  const { visibility, setWidgetVisible } = useWidgetPreferences();
+  const noneVisible = !visibility.sales && !visibility.activeUsers && !visibility.recentOrders;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -30,6 +34,8 @@ export default function DashboardPage() {
         )}
       </header>
 
+      <WidgetToggles visibility={visibility} onChange={setWidgetVisible} />
+
       {state.kind === 'loading' && (
         <p role="status" className="text-sm text-slate-600">
           Loading dashboard…
@@ -40,11 +46,28 @@ export default function DashboardPage() {
           Couldn&apos;t load the dashboard: {state.message}. Retrying automatically.
         </p>
       )}
-      {state.kind === 'ready' && (
+      {state.kind === 'ready' && noneVisible && (
+        <p className="rounded-lg border border-dashed border-slate-300 p-6 text-center text-sm text-slate-600">
+          All widgets are hidden. Tick one above to bring it back.
+        </p>
+      )}
+      {state.kind === 'ready' && !noneVisible && (
         <div className="grid gap-4 lg:grid-cols-3">
-          <SalesWidget sales={state.data.sales} />
-          <ActiveUsersWidget activeUsers={state.data.activeUsers} className="lg:col-span-2" />
-          <RecentOrdersWidget orders={state.data.recentOrders} className="lg:col-span-3" />
+          {visibility.sales && (
+            <SalesWidget
+              sales={state.data.sales}
+              className={visibility.activeUsers ? undefined : 'lg:col-span-3'}
+            />
+          )}
+          {visibility.activeUsers && (
+            <ActiveUsersWidget
+              activeUsers={state.data.activeUsers}
+              className={visibility.sales ? 'lg:col-span-2' : 'lg:col-span-3'}
+            />
+          )}
+          {visibility.recentOrders && (
+            <RecentOrdersWidget orders={state.data.recentOrders} className="lg:col-span-3" />
+          )}
         </div>
       )}
     </div>

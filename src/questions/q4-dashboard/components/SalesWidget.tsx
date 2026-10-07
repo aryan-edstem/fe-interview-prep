@@ -5,12 +5,13 @@ import { WidgetCard } from './WidgetCard';
 
 interface SalesWidgetProps {
   sales: Slice<SalesSummary>;
+  className?: string;
 }
 
 /** Memoized: re-renders only when the sales slice changes reference (see `mergeDashboard`). */
-export const SalesWidget = memo(function SalesWidget({ sales }: SalesWidgetProps) {
+export const SalesWidget = memo(function SalesWidget({ sales, className }: SalesWidgetProps) {
   return (
-    <WidgetCard title="Sales today" updatedAt={sales.updatedAt}>
+    <WidgetCard title="Sales today" updatedAt={sales.updatedAt} className={className}>
       <p className="text-3xl font-semibold text-slate-900 tabular-nums">
         {formatCurrency(sales.value.totalToday)}
       </p>

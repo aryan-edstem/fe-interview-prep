@@ -45,3 +45,8 @@ export interface DashboardData {
   activeUsers: Slice<ActiveUsersPoint[]>;
   recentOrders: Slice<Order[]>;
 }
+
+export type WidgetId = 'sales' | 'activeUsers' | 'recentOrders';
+
+/** Which widgets the user has chosen to show. */
+export type WidgetVisibility = Record<WidgetId, boolean>;
