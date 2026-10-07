@@ -19,6 +19,8 @@ const allPosts: Post[] = Array.from({ length: TOTAL }, (_, i) => ({
 
 /** Every `skip` the feed requested, in order. */
 let requestedSkips: number[] = [];
+/** Every post id the detail page requested. */
+let requestedPostIds: string[] = [];
 
 function pageResponse(skip: number, limit: number, posts = allPosts.slice(skip, skip + limit)) {
   return HttpResponse.json({ posts, total: TOTAL, skip, limit: posts.length });
@@ -35,6 +37,7 @@ function mockPostsApi(
       return respond(skip, Number(url.searchParams.get('limit')));
     }),
     http.get(`${POSTS_URL}/:id`, ({ params }) => {
+      requestedPostIds.push(String(params.id));
       const post = allPosts.find((p) => p.id === Number(params.id));
       return post ? HttpResponse.json(post) : new HttpResponse(null, { status: 404 });
     }),
@@ -106,6 +109,7 @@ function postTitles() {
 
 beforeEach(() => {
   requestedSkips = [];
+  requestedPostIds = [];
   observers.clear();
   vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
   // The router's scroll restoration calls this; jsdom doesn't implement it.
@@ -230,4 +234,15 @@ describe('infinite feed', () => {
     expect(await screen.findByRole('heading', { name: 'Post not found' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to feed' })).toHaveAttribute('href', '/feed');
   });
+
+  it.each(['abc', '1.5', '0', '-3'])(
+    'shows not found for invalid post id %s without fetching',
+    async (id) => {
+      mockPostsApi();
+      renderRoute(`/feed/${id}`);
+      expect(screen.getByRole('heading', { name: 'Post not found' })).toBeInTheDocument();
+      await Promise.resolve();
+      expect(requestedPostIds).toEqual([]);
+    },
+  );
 });

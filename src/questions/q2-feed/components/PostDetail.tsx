@@ -48,20 +48,40 @@ function PostSkeleton() {
   );
 }
 
+function PostNotFound() {
+  return (
+    <div className="empty-state">
+      <h1 className="text-lg font-semibold">Post not found</h1>
+      <p>It may have been removed, or the link is wrong.</p>
+    </div>
+  );
+}
+
+/** `/feed/:postId` only names a post when the segment is a positive whole number. */
+function parsePostId(segment: string | undefined): number | null {
+  if (!segment || !/^\d+$/.test(segment)) return null;
+  const id = Number(segment);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+}
+
 export function PostDetail() {
-  const { postId } = useParams();
-  const { state, retry } = usePost(Number(postId));
+  const id = parsePostId(useParams().postId);
 
   return (
     <div className="page max-w-3xl">
       <BackToFeed />
+      {id === null ? <PostNotFound /> : <PostContent id={id} />}
+    </div>
+  );
+}
+
+function PostContent({ id }: { id: number }) {
+  const { state, retry } = usePost(id);
+
+  return (
+    <>
       {state.kind === 'loading' && <PostSkeleton />}
-      {state.kind === 'not-found' && (
-        <div className="empty-state">
-          <h1 className="text-lg font-semibold">Post not found</h1>
-          <p>It may have been removed, or the link is wrong.</p>
-        </div>
-      )}
+      {state.kind === 'not-found' && <PostNotFound />}
       {state.kind === 'error' && (
         <div role="alert" className="alert alert-danger">
           <p>
@@ -97,6 +117,6 @@ export function PostDetail() {
           </div>
         </article>
       )}
-    </div>
+    </>
   );
 }
