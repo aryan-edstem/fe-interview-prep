@@ -11,9 +11,12 @@ function BackToFeed() {
   const navigate = useNavigate();
   const cameFromFeed = hasFeedOrigin(location.state);
 
-  // Going *back* (not pushing /feed) lets the router restore the feed's scroll position.
+  // Going *back* (not pushing /feed) lets the router restore the feed's scroll position. Clicks
+  // that mean "open elsewhere" (modifier keys, non-primary button) are left to the browser.
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    if (!cameFromFeed) return;
+    const opensElsewhere =
+      event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
+    if (!cameFromFeed || opensElsewhere || event.defaultPrevented) return;
     event.preventDefault();
     void navigate(-1);
   }

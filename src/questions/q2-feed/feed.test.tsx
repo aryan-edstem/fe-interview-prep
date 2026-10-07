@@ -208,6 +208,22 @@ describe('infinite feed', () => {
     expect(requestedSkips).toEqual([0, 10]);
   });
 
+  it('leaves modifier clicks on "Back to feed" to the browser', async () => {
+    mockPostsApi();
+    const { user, router } = renderRoute('/feed');
+    await user.click(await screen.findByRole('link', { name: 'Post 3' }));
+    const back = await screen.findByRole('link', { name: 'Back to feed' });
+
+    // Ctrl/Cmd+click means "open in a new tab": this tab must stay on the post.
+    await user.keyboard('{Control>}');
+    await user.click(back);
+    await user.keyboard('{/Control}');
+    expect(router.state.location.pathname).toBe('/feed/3');
+
+    await user.click(back);
+    expect(router.state.location.pathname).toBe('/feed');
+  });
+
   it('shows not found for an unknown post', async () => {
     mockPostsApi();
     renderRoute('/feed/999');
