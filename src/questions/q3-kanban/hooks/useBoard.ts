@@ -1,6 +1,7 @@
-import { useReducer } from 'react';
+import { useEffect, useReducer } from 'react';
 import type { BoardState, Card, CardDraft, ColumnId, DeletedCard } from '../types';
-import { boardReducer, emptyBoard, locateCard } from './boardReducer';
+import { boardReducer, locateCard } from './boardReducer';
+import { loadBoard, saveBoard } from './boardStorage';
 
 /** Where a card ended up after a move, for announcements ("position 2 of 3"). */
 export interface MoveResult {
@@ -15,7 +16,12 @@ function createId(): string {
 }
 
 export function useBoard() {
-  const [board, dispatch] = useReducer(boardReducer, undefined, emptyBoard);
+  const [board, dispatch] = useReducer(boardReducer, undefined, loadBoard);
+
+  // Sync to storage so the board survives a refresh.
+  useEffect(() => {
+    saveBoard(board);
+  }, [board]);
 
   function addCard(column: ColumnId, draft: CardDraft): Card {
     const card: Card = { id: createId(), ...draft };
